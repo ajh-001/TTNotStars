@@ -3,8 +3,8 @@
   "short_name": "TT",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#828282",
-  "theme_color": "#000000",
+  "background_color": "#789dcc",
+  "theme_color": "#828282",
   "icons": [
     {
       "src": "tt-icon-192.png",
