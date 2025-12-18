@@ -1,7 +1,7 @@
 {
   "name": "TT Not-Stars",
   "short_name": "TT*",
-  "start_url": "TTNotStarsLocal3b.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
