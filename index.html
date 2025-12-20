@@ -23,7 +23,7 @@ window.onpopstate = function() {
     
     // Optional: Show a message or go to your app's internal "home" menu
     console.log("Back gesture detected!");
-};
+}
 </script>
     
     <style>
@@ -1340,7 +1340,7 @@ window.onpopstate = function() {
 
             if (isReady) {
                 startQuizButton.disabled = false;
-                startQuizButton.textContent = `Start Quiz (${systemParams.totalQuestions} Questions)`; // Reflect total questions
+                startQuizButton.textContent = `Start Quiz`; // Reflect total questions
             } else if (currentPlayerName === null) {
                 startQuizButton.disabled = true;
                 startQuizButton.textContent = `Select Player to Start`;
@@ -2021,4 +2021,5 @@ window.onpopstate = function() {
     </script>
 </body>
 </html>
+
 
