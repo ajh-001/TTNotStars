@@ -122,7 +122,7 @@ window.onpopstate = function() {
     <div id="app-container" class="container mx-auto p-4 md:p-8">
         <!-- Page Header -->
         <header id="page-header" class="text-center mb-8">
-            <h1 class="text-5xl md:text-6xl text-gray-900" style="font-family: 'Kranky';">TT Not-Stars v2</h1>
+            <h1 class="text-5xl md:text-6xl text-gray-900" style="font-family: 'Kranky';">TT Not-Stars</h1>
 
         </header>
 
@@ -654,6 +654,18 @@ window.onpopstate = function() {
     </div>
 
     <script>
+
+// Push a fake state so there is "somewhere to go back from"
+window.history.pushState(null, null, window.location.href);
+
+window.onpopstate = function() {
+    // When the user swipes back, push the state again to keep them here
+    window.history.pushState(null, null, window.location.href);
+    
+    // Optional: Show a message or go to your app's internal "home" menu
+    console.log("Back gesture detected!");
+}
+        
         // --- CONSTANTS ---
         const LS_KEY = 'tt_not_stars_data_v2';
         const SYSTEM_PARAMS_KEY = '_system_params'; // Key to store global settings
@@ -2021,5 +2033,6 @@ window.onpopstate = function() {
     </script>
 </body>
 </html>
+
 
 
