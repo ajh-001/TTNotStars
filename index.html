@@ -112,7 +112,7 @@
     <div id="app-container" class="container mx-auto p-4 md:p-8">
         <!-- Page Header -->
         <header id="page-header" class="text-center mb-8">
-            <h1 class="text-5xl md:text-6xl text-gray-900" style="font-family: 'Kranky';">TT Not-Stars</h1>
+            <h1 class="text-5xl md:text-6xl text-gray-900" style="font-family: 'Kranky';">TT Not-Stars 0</h1>
 
         </header>
 
@@ -645,35 +645,37 @@
 
     <script>
 
-// Function to lock the history
-function lockHistory() {
-    window.history.pushState(null, null, window.location.href);
+let isExiting = false;
+
+// 1. Create the initial "trap"
+window.history.pushState({view: "main"}, null, "");
+
+window.onpopstate = function(event) {
+    if (isExiting) {
+        // If we are in the middle of exiting, let the back action happen
+        return;
+    }
+
+    // 2. Show the modal
+    document.getElementById('exit-modal').style.display = 'flex';
+
+    // 3. Immediately push the state back so the app doesn't close yet
+    window.history.pushState({view: "main"}, null, "");
+};
+
+function stayInApp() {
+    document.getElementById('exit-modal').style.display = 'none';
 }
 
-// Initial lock
-lockHistory();
-
-// Re-lock every time the user tries to go back
-window.onpopstate = function () {
-    lockHistory();
-    // Optional: Trigger a custom event, like closing a menu or showing a message
-    console.log("Back gesture blocked");
-};
-
-// Logic for a "Double Press to Exit" (Optional but Pro)
-let backPressCount = 0;
-window.onpopstate = function () {
-    lockHistory();
-    backPressCount++;
+function leaveApp() {
+    isExiting = true; 
+    document.getElementById('exit-modal').style.display = 'none';
     
-    if (backPressCount === 1) {
-        alert("Press back again to exit."); // Or use a custom toast
-        setTimeout(() => { backPressCount = 0; }, 2000); // Reset after 2 seconds
-    } else if (backPressCount === 2) {
-        window.history.back(); // Actually let them leave
-    }
-};
-
+    // 4. Go back twice: once to clear our fake state, 
+    // and once more to trigger the actual exit.
+    window.history.go(-2);
+}
+        
 
         
         
@@ -2044,6 +2046,7 @@ window.onpopstate = function () {
     </script>
 </body>
 </html>
+
 
 
 
