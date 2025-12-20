@@ -7,6 +7,8 @@
     
     <link rel="manifest" href="manifest.json">
 
+
+
 <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js');
@@ -17,7 +19,9 @@
         html, body {
   overscroll-behavior-y: contain;
 }
-    </style>
+    </style> 
+
+
     
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -183,10 +187,23 @@
 
                     <!-- Select Tables Section -->
                     <div class="mb-6 p-4 border rounded-xl bg-gray-50">
-                        <p class="font-semibold mb-2 text-gray-700">Select Tables:</p>
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
+                            <p class="font-semibold text-gray-700 mb-2 sm:mb-0">Select Tables:</p>
+                            
+                           
+                        </div>
+
                         <div class="grid grid-cols-6 sm:grid-cols-12 gap-3" id="table-checkbox-container">
                             <!-- Checkboxes will be generated here -->
                         </div>
+
+                         <!-- Selection Helper Buttons -->
+                            <div class="mt-4 pt-4 border-t border-gray-200 flex justify-start">
+                                <button id="btn-select-all" class="bg-white text-blue-600 font-semibold px-4 py-2 rounded-lg shadow-sm border border-gray-300 hover:bg-blue-50 hover:border-blue-400 transition">All</button>
+                                <button id="btn-select-none" class="bg-white text-blue-600 font-semibold px-4 py-2 rounded-lg shadow-sm border border-gray-300 hover:bg-blue-50 hover:border-blue-400 transition">None</button>
+                                <button id="btn-lucky-dip" class="bg-white text-blue-600 font-semibold px-4 py-2 rounded-lg shadow-sm border border-gray-300 hover:bg-blue-50 hover:border-blue-400 transition">Lucky Dip
+                                </button>
+                            </div>
                     </div>
                     
                     <button id="start-quiz-button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-md transition duration-150 ease-in-out disabled:opacity-50" disabled>
@@ -1860,6 +1877,45 @@
                 }
             });
 
+            // --- TABLE SELECTION BUTTONS ---
+            const btnSelectAll = document.getElementById('btn-select-all');
+            const btnSelectNone = document.getElementById('btn-select-none');
+            const btnLuckyDip = document.getElementById('btn-lucky-dip');
+
+            btnSelectAll.addEventListener('click', () => {
+                document.querySelectorAll('.table-checkbox').forEach(cb => {
+                    cb.checked = true;
+                    updateLabelClass(cb);
+                });
+                updateSelectedTables();
+            });
+
+            btnSelectNone.addEventListener('click', () => {
+                 document.querySelectorAll('.table-checkbox').forEach(cb => {
+                    cb.checked = false;
+                    updateLabelClass(cb);
+                });
+                updateSelectedTables();
+            });
+
+            btnLuckyDip.addEventListener('click', () => {
+                const checkboxes = Array.from(document.querySelectorAll('.table-checkbox'));
+                // Reset
+                checkboxes.forEach(cb => { cb.checked = false; updateLabelClass(cb); });
+                
+                // Random number of tables (1 to 12)
+                const numberOfTables = Math.floor(Math.random() * 12) + 1;
+                
+                // Shuffle and slice
+                const shuffled = checkboxes.sort(() => 0.5 - Math.random());
+                
+                shuffled.slice(0, numberOfTables).forEach(cb => {
+                    cb.checked = true;
+                    updateLabelClass(cb);
+                });
+                updateSelectedTables();
+            });
+
 
             document.querySelectorAll('input[name="operation-mode"]').forEach(radio => {
                 radio.addEventListener('change', (e) => { currentOperationMode = e.target.value; });
@@ -1953,8 +2009,4 @@
         };
     </script>
 </body>
-
 </html>
-
-
-
