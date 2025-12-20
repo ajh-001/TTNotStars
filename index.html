@@ -660,6 +660,21 @@ window.onpopstate = function () {
     console.log("Back gesture blocked");
 };
 
+// Logic for a "Double Press to Exit" (Optional but Pro)
+let backPressCount = 0;
+window.onpopstate = function () {
+    lockHistory();
+    backPressCount++;
+    
+    if (backPressCount === 1) {
+        alert("Press back again to exit."); // Or use a custom toast
+        setTimeout(() => { backPressCount = 0; }, 2000); // Reset after 2 seconds
+    } else if (backPressCount === 2) {
+        window.history.back(); // Actually let them leave
+    }
+};
+
+
         
         
         // --- CONSTANTS ---
@@ -2029,6 +2044,7 @@ window.onpopstate = function () {
     </script>
 </body>
 </html>
+
 
 
 
