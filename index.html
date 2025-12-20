@@ -20,48 +20,6 @@
         html, body {
   overscroll-behavior-y: contain;
 }
-
-        .modal-overlay {
-    display: none; /* JavaScript changes this to 'flex' to show it */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7); /* Darkens the app behind the popup */
-    z-index: 9999; /* Makes sure it sits on top of everything */
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-box {
-    background: white;
-    padding: 25px;
-    border-radius: 15px;
-    width: 85%;
-    max-width: 320px;
-    text-align: center;
-    font-family: sans-serif;
-}
-
-.modal-buttons {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-.modal-buttons button {
-    flex: 1;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 16px;
-}
-
-.btn-stay { background: #eee; color: #333; }
-.btn-leave { background: #d32f2f; color: white; }
-        
     </style> 
 
 
@@ -154,7 +112,7 @@
     <div id="app-container" class="container mx-auto p-4 md:p-8">
         <!-- Page Header -->
         <header id="page-header" class="text-center mb-8">
-            <h1 class="text-5xl md:text-6xl text-gray-900" style="font-family: 'Kranky';">TT Not-Stars 0</h1>
+            <h1 class="text-5xl md:text-6xl text-gray-900" style="font-family: 'Kranky';">TT Not-Stars</h1>
 
         </header>
 
@@ -453,19 +411,6 @@
         </div>
     </div>
     
-    <div id="exit-modal" class="modal-overlay">
-    <div class="modal-box">
-        <h3>Exit App?</h3>
-        <p>Are you sure you want to leave? Any unsaved changes might be lost.</p>
-        
-        <div class="modal-buttons">
-            <button onclick="stayInApp()" class="btn-stay">Stay</button>
-            <button onclick="leaveApp()" class="btn-leave">Leave</button>
-        </div>
-    </div>
-    </div>
-    
-
     <!-- Background Color Modal (New with Sliders) -->
     <div id="color-modal" class="modal hidden">
         <div class="modal-content w-full md:w-2/3 lg:w-1/2">
@@ -703,40 +648,6 @@
 
     <script>
 
-let isExiting = false;
-
-// 1. Create the initial "trap"
-window.history.pushState({view: "main"}, null, "");
-
-window.onpopstate = function(event) {
-    if (isExiting) {
-        // If we are in the middle of exiting, let the back action happen
-        return;
-    }
-
-    // 2. Show the modal
-    document.getElementById('exit-modal').style.display = 'flex';
-
-    // 3. Immediately push the state back so the app doesn't close yet
-    window.history.pushState({view: "main"}, null, "");
-};
-
-function stayInApp() {
-    document.getElementById('exit-modal').style.display = 'none';
-}
-
-function leaveApp() {
-    isExiting = true; 
-    document.getElementById('exit-modal').style.display = 'none';
-    
-    // 4. Go back twice: once to clear our fake state, 
-    // and once more to trigger the actual exit.
-    window.history.go(-2);
-}
-        
-
-        
-        
         // --- CONSTANTS ---
         const LS_KEY = 'tt_not_stars_data_v2';
         const SYSTEM_PARAMS_KEY = '_system_params'; // Key to store global settings
@@ -2104,6 +2015,7 @@ function leaveApp() {
     </script>
 </body>
 </html>
+
 
 
 
