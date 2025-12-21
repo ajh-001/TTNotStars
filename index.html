@@ -8,14 +8,16 @@
     <link rel="manifest" href="manifest.json">
 
 
+<!--
 
 <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js');
   }
-
 </script>
     
+-->
+
     <style>
         html, body {
   overscroll-behavior-y: contain;
@@ -105,6 +107,15 @@
         input#rgb-slider-r { background: linear-gradient(to right, #ffffff, #ff0000); }
         input#rgb-slider-g { background: linear-gradient(to right, #ffffff, #00ff00); }
         input#rgb-slider-b { background: linear-gradient(to right, #ffffff, #0000ff); }
+
+        .fade-out {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        .modal-hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -115,6 +126,15 @@
             <h1 class="text-5xl md:text-6xl text-gray-900" style="font-family: 'Kranky';">TT Not-Stars</h1>
 
         </header>
+
+       <div id="splashScreen" class="fixed inset-0 bg-slate-700 z-[100] flex flex-col items-center justify-center gap-8 p-6 text-center">
+
+    <img src="tt-icon-512.png" alt="App Logo">
+    
+    <button id="enterBtn" class="px-12 py-4 bg-white text-black rounded-full font-bold text-lg hover:scale-105 transition-transform active:scale-95">
+        Start
+    </button>
+</div>
 
         <!-- Notification/Message Box -->
         <div id="message-box" class="hidden fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-xl z-50 transition-transform duration-300 transform translate-x-full"></div>
@@ -198,13 +218,17 @@
                             <!-- Checkboxes will be generated here -->
                         </div>
 
-                         <!-- Selection Helper Buttons -->
-                            <div class="mt-4 pt-4 border-t border-gray-200 flex justify-start">
-                                <button id="btn-select-all" class="bg-white text-blue-600 font-semibold px-4 py-2 rounded-lg shadow-sm border border-gray-300 hover:bg-blue-50 hover:border-blue-400 transition">All</button>
-                                <button id="btn-select-none" class="bg-white text-blue-600 font-semibold px-4 py-2 rounded-lg shadow-sm border border-gray-300 hover:bg-blue-50 hover:border-blue-400 transition">None</button>
-                                <button id="btn-lucky-dip" class="bg-white text-blue-600 font-semibold px-4 py-2 rounded-lg shadow-sm border border-gray-300 hover:bg-blue-50 hover:border-blue-400 transition">Lucky Dip
-                                </button>
-                            </div>
+                        <div class="mt-4 pt-4 border-t border-gray-200 grid grid-cols-3 gap-3">
+    <button id="btn-select-all" class="bg-white text-blue-600 font-semibold py-2 rounded-lg shadow-sm border border-gray-300 hover:bg-blue-50 hover:border-blue-400 transition text-center">
+        All
+    </button>
+    <button id="btn-select-none" class="bg-white text-blue-600 font-semibold py-2 rounded-lg shadow-sm border border-gray-300 hover:bg-blue-50 hover:border-blue-400 transition text-center">
+        None
+    </button>
+    <button id="btn-lucky-dip" class="bg-white text-blue-600 font-semibold py-2 rounded-lg shadow-sm border border-gray-300 hover:bg-blue-50 hover:border-blue-400 transition text-center">
+        Lucky Dip
+    </button>
+</div>
                     </div>
                     
                     <button id="start-quiz-button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-md transition duration-150 ease-in-out disabled:opacity-50" disabled>
@@ -478,7 +502,23 @@
         </div>
     </div>
 
+        <!-- Are You Sure Modal -->
+    <div id="exitModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[200] hidden items-center justify-center p-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-[2rem] p-8 w-full max-w-sm shadow-2xl">
 
+            <h2 class="text-2xl font-bold mb-2">Unsaved Progress</h2>
+            <p class="text-slate-400 mb-8">Leaving now will erase your current session data. Do you want to stay?</p>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <button id="stayBtn" class="py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold transition-colors">
+                    Stay
+                </button>
+                <button id="leaveBtn" class="py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-2xl font-bold transition-colors">
+                    Leave
+                </button>
+            </div>
+        </div>
+    </div>
 
     
     <!-- Quiz Setup Modal (NEW) -->
@@ -2012,15 +2052,61 @@
                 applyBackgroundColor(DEFAULT_PLAYER_DATA.backgroundColor);
             }
         };
+
+        //splash screen and backbutton-exit solution
+
+        const splash = document.getElementById('splashScreen');
+        const enterBtn = document.getElementById('enterBtn');
+        const exitModal = document.getElementById('exitModal');
+        const stayBtn = document.getElementById('stayBtn');
+        const leaveBtn = document.getElementById('leaveBtn');
+
+        let guardActive = false;
+
+        // 1. Initialize protection on "Enter"
+        enterBtn.addEventListener('click', () => {
+            // Permission granted by user click
+            window.history.pushState({ protected: true }, "");
+            guardActive = true;
+
+            // Visual transition
+            splash.classList.add('fade-out');
+            setTimeout(() => splash.style.display = 'none', 500);
+        });
+
+        // 2. Intercept Back Gesture
+        window.addEventListener('popstate', (event) => {
+            if (guardActive) {
+                // Show custom alert
+                exitModal.style.display = 'flex';
+                
+                // Push state back so the next swipe also hits popstate
+                window.history.pushState({ protected: true }, "");
+            }
+        });
+
+        // 3. Stay Button logic
+        stayBtn.addEventListener('click', () => {
+            exitModal.style.display = 'none';
+        });
+
+        // 4. Leave Button logic
+        leaveBtn.addEventListener('click', () => {
+            guardActive = false;
+            // Try to close, if it fails (security), go to blank page
+            window.close();
+            location.href = "about:blank";
+        });
+
+        // 5. Native Backup (Tab close/Refresh)
+        window.onbeforeunload = function(e) {
+            if (guardActive) {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
+            }
+        };
+
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
