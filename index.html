@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TT Not-Stars (Github)</title>
+    <title>TT Not-Stars</title>
     
     <link rel="manifest" href="manifest.json">
+
 
 <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js');
   }
 </script>
+
 
     <style>
         html, body {
@@ -139,10 +141,10 @@
 
         .screen-container {
             background: var(--screen-bg);
-            padding: 15px;
+            padding: 15px 15px 25px 15px; /* Increased bottom padding to 25px */
             border-radius: 8px;
             margin-bottom: 20px;
-            height: 140px;
+            height: 150px; /* Increased height to 150px to fit padding */
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -240,13 +242,7 @@
 <body>
     
     <div id="app-container" class="container mx-auto p-4 md:p-8">
-        <!-- Page Header -->
-        <header id="page-header" class="text-center mb-8">
-            <h1 class="text-5xl md:text-6xl text-gray-900" style="font-family: 'Kranky';"><!--TT Not-Stars--></h1>
-
-        </header>
         
-
         <div id="splashScreen" class="fixed inset-0 bg-[#789dcc] z-[100] flex flex-col items-center justify-center gap-8 p-6 text-center">
             <img src="tt-icon-512.png" alt="App Logo">
             <button id="enterBtn" class="px-12 py-4 bg-white text-black rounded-full font-bold text-lg hover:scale-105 transition-transform active:scale-95">
@@ -257,13 +253,70 @@
         <!-- Notification/Message Box -->
         <div id="message-box" class="hidden fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-xl z-50 transition-transform duration-300 transform translate-x-full"></div>
 
-        <!-- PAGE 1: QUIZ & CONTROLS -->
-        <div id="page-quiz" class="space-y-8">
+        <!-- ==================================================================================== -->
+        <!--                                      PAGE: HOME                                      -->
+        <!-- ==================================================================================== -->
+        <div id="page-home" class="hidden space-y-8">
+            <header id="page-header" class="text-center mb-8 hidden">
+                <h1 class="text-5xl md:text-6xl text-gray-900" style="font-family: 'Kranky';">TT Not-Stars</h1>
+            </header>
 
-            <!-- Step 1: Selection (White Box) -->
+            <div class="flex flex-col items-center pt-8">
+                <!-- Static Home Calculator -->
+                <div class="calculator transition-transform duration-300">
+                    <div class="flex justify-between items-end mb-2">
+                            <div class="text-gray-500 text-xs font-bold tracking-widest uppercase">TT Not-Stars Calc</div>
+                            <div class="text-gray-700 text-sm font-bold tracking-wider uppercase font-mono">HOME</div>
+                    </div>
+                    
+                    <div class="screen-container">
+                        <div class="screen-glass"></div>
+                        <div class="stats-bar">
+                            <span>Ready</span>
+                            <span>Input</span> 
+                        </div>
+                        <div class="question-display">TT Not-Stars</div>
+                        <div class="answer-display text-4xl">WELCOME</div>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-4">
+                        <button class="calc-btn">7</button>
+                        <button class="calc-btn">8</button>
+                        <button class="calc-btn">9</button>
+                        <button class="calc-btn btn-del">C</button>
+                        <button class="calc-btn">4</button>
+                        <button class="calc-btn">5</button>
+                        <button class="calc-btn">6</button>
+                        <button class="calc-btn btn-op">&larr;</button>
+                        <button class="calc-btn">1</button>
+                        <button class="calc-btn">2</button>
+                        <button class="calc-btn">3</button>
+                        <button class="calc-btn btn-op row-span-2 flex items-center justify-center">ENT</button>
+                        <button class="calc-btn col-span-2">0</button>
+                        <button class="calc-btn">.</button>
+                    </div>
+                </div>
+
+                <div class="mt-8 w-full max-w-[420px] space-y-4">
+                    <button onclick="showPage('setup')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xl py-4 rounded-xl shadow-lg transition duration-150 ease-in-out border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1">
+                        Set Up New Quiz
+                    </button>
+                    
+                    <button onclick="showPage('stats')" class="w-full bg-white text-indigo-700 font-bold text-xl py-4 rounded-xl shadow-lg border-2 border-indigo-200 hover:bg-indigo-50 transition duration-150 ease-in-out active:translate-y-1">
+                        View Progress & Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ==================================================================================== -->
+        <!--                                      PAGE: SETUP                                     -->
+        <!-- ==================================================================================== -->
+        <div id="page-setup" class="hidden space-y-8">
             <div id="selection-panel" class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
                 
-                <!-- Player Display (Moved Inside) -->
+                <!-- Player Display -->
                 <div id="selection-player-display" class="mb-4 text-sm text-gray-500 border-b pb-2 flex justify-between items-center">
                     <div>
                         <span class="font-semibold">Current Player:</span> 
@@ -326,8 +379,6 @@
                 <div class="mb-6 p-4 border rounded-xl bg-gray-50">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
                         <p class="font-semibold text-gray-700 mb-2 sm:mb-0">Select Tables:</p>
-                        
-                        
                     </div>
 
                     <div class="grid grid-cols-6 sm:grid-cols-12 gap-3" id="table-checkbox-container">
@@ -350,94 +401,125 @@
                 <button id="start-quiz-button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-md transition duration-150 ease-in-out disabled:opacity-50" disabled>
                     Select Player and Tables to Start
                 </button>
-            </div>
 
-            <!-- Step 2: Calculator Quiz Interface (Transparent / No Box) -->
-            <div id="quiz-panel" class="hidden flex flex-col items-center">
+                <!-- Navigation Back to Home from Setup -->
+                 <div class="mt-6 pt-4 border-t flex flex-col sm:flex-row justify-center gap-4">
+                    <button onclick="showPage('home')" class="text-gray-500 hover:text-gray-800 font-medium flex items-center justify-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Back to Home
+                    </button>
+                    <button onclick="showPage('stats')" class="text-indigo-600 hover:text-indigo-800 font-medium flex items-center justify-center gap-2 px-4 py-2 rounded-lg hover:bg-indigo-50 transition">
+                        View Progress & Settings
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </button>
+                 </div>
+            </div>
+        </div>
+
+
+        <!-- ==================================================================================== -->
+        <!--                                   PAGE: ACTIVE QUIZ                                  -->
+        <!-- ==================================================================================== -->
+        <div id="page-active-quiz" class="hidden flex flex-col items-center">
                 
-                <div class="calculator">
-                    <!-- Brand / Player Name -->
-                    <div class="flex justify-between items-end mb-2">
-                            <div class="text-gray-500 text-xs font-bold tracking-widest uppercase">TT Not-Stars Calc</div>
-                            <div id="calc-player-brand" class="text-gray-700 text-sm font-bold tracking-wider uppercase font-mono">PLAYER</div>
+            <div class="calculator">
+                <!-- Brand / Player Name -->
+                <div class="flex justify-between items-end mb-2">
+                        <div class="text-gray-500 text-xs font-bold tracking-widest uppercase">TT Not-Stars Calc</div>
+                        <div id="calc-player-brand" class="text-gray-700 text-sm font-bold tracking-wider uppercase font-mono">PLAYER</div>
+                </div>
+                
+                <div id="calc-screen" class="screen-container">
+                    <div class="screen-glass"></div>
+                    
+                    <div class="stats-bar">
+                        <span id="calc-progress-label">Q: 1/20</span>
+                        <span>Input</span> 
                     </div>
                     
-                    <div id="calc-screen" class="screen-container">
-                        <div class="screen-glass"></div>
-                        
-                        <div class="stats-bar">
-                            <span id="calc-progress-label">Q: 1/20</span>
-                            <!-- Timer hidden from immediate view to match calc aesthetic, but tracked in BG -->
-                            <span>Input</span> 
-                        </div>
-                        
-                        <div id="question-text" class="question-display">READY?</div>
-                        <div id="answer-input-display" class="answer-display">_</div>
-                    </div>
-
-                    <div class="grid grid-cols-4 gap-4">
-                        <button class="calc-btn" onclick="addCalcInput('7')">7</button>
-                        <button class="calc-btn" onclick="addCalcInput('8')">8</button>
-                        <button class="calc-btn" onclick="addCalcInput('9')">9</button>
-                        <button class="calc-btn btn-del" onclick="clearCalcInput()">C</button>
-
-                        <button class="calc-btn" onclick="addCalcInput('4')">4</button>
-                        <button class="calc-btn" onclick="addCalcInput('5')">5</button>
-                        <button class="calc-btn" onclick="addCalcInput('6')">6</button>
-                        <button class="calc-btn btn-op" onclick="deleteLastCalcInput()">&larr;</button>
-
-                        <button class="calc-btn" onclick="addCalcInput('1')">1</button>
-                        <button class="calc-btn" onclick="addCalcInput('2')">2</button>
-                        <button class="calc-btn" onclick="addCalcInput('3')">3</button>
-                        <button class="calc-btn btn-op row-span-2 flex items-center justify-center" onclick="submitAnswer()">ENT</button>
-
-                        <button class="calc-btn col-span-2" onclick="addCalcInput('0')">0</button>
-                        <button class="calc-btn" onclick="addCalcInput('.')">.</button>
-                    </div>
+                    <div id="question-text" class="question-display">READY?</div>
+                    <div id="answer-input-display" class="answer-display">_</div>
                 </div>
+
+                <div class="grid grid-cols-4 gap-4">
+                    <button class="calc-btn" onclick="addCalcInput('7')">7</button>
+                    <button class="calc-btn" onclick="addCalcInput('8')">8</button>
+                    <button class="calc-btn" onclick="addCalcInput('9')">9</button>
+                    <button class="calc-btn btn-del" onclick="clearCalcInput()">C</button>
+
+                    <button class="calc-btn" onclick="addCalcInput('4')">4</button>
+                    <button class="calc-btn" onclick="addCalcInput('5')">5</button>
+                    <button class="calc-btn" onclick="addCalcInput('6')">6</button>
+                    <button class="calc-btn btn-op" onclick="deleteLastCalcInput()">&larr;</button>
+
+                    <button class="calc-btn" onclick="addCalcInput('1')">1</button>
+                    <button class="calc-btn" onclick="addCalcInput('2')">2</button>
+                    <button class="calc-btn" onclick="addCalcInput('3')">3</button>
+                    <button class="calc-btn btn-op row-span-2 flex items-center justify-center" onclick="submitAnswer()">ENT</button>
+
+                    <button class="calc-btn col-span-2" onclick="addCalcInput('0')">0</button>
+                    <button class="calc-btn" onclick="addCalcInput('.')">.</button>
+                </div>
+            </div>
+            
+            <button id="end-quiz-button" class="mt-8 text-sm text-gray-700 font-bold hover:text-red-600 transition duration-150 underline">
+                End Quiz Early
+            </button>
+        </div>
+
+
+        <!-- ==================================================================================== -->
+        <!--                                     PAGE: RESULTS                                    -->
+        <!-- ==================================================================================== -->
+        <div id="page-results" class="hidden text-center bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+            <!-- Added Player Name Display for Results -->
+            <p class="mb-2 text-gray-500 font-semibold">Player: <span id="results-player-name" class="text-indigo-600 font-bold"></span></p>
+
+            <h2 class="text-4xl font-extrabold text-teal-600 mb-4">Quiz Complete!</h2>
+            <p id="results-summary" class="text-xl text-gray-700 mb-6">You scored X out of 20.</p>
+            <div id="results-details" class="text-left max-h-64 overflow-y-auto p-4 bg-gray-50 rounded-lg shadow-inner mb-6 border">
+                <!-- Detailed results list goes here -->
+            </div>
+            
+            <div class="mt-6 space-y-3">
+                <button onclick="showPage('home')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-md transition duration-150 ease-in-out">
+                    Back to Home
+                </button>
                 
-                <button id="end-quiz-button" class="mt-8 text-sm text-gray-700 font-bold hover:text-red-600 transition duration-150 underline">
-                    End Quiz Early
-                </button>
-            </div>
-
-            <!-- Step 3: Results (White Box) -->
-            <div id="results-panel" class="hidden text-center bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-                <!-- Added Player Name Display for Results -->
-                <p class="mb-2 text-gray-500 font-semibold">Player: <span id="results-player-name" class="text-indigo-600 font-bold"></span></p>
-
-                <h2 class="text-4xl font-extrabold text-teal-600 mb-4">Quiz Complete!</h2>
-                <p id="results-summary" class="text-xl text-gray-700 mb-6">You scored X out of 20.</p>
-                <div id="results-details" class="text-left max-h-64 overflow-y-auto p-4 bg-gray-50 rounded-lg shadow-inner mb-6 border">
-                    <!-- Detailed results list goes here -->
+                <div class="grid grid-cols-2 gap-3">
+                     <button onclick="showPage('stats')" class="bg-white text-indigo-700 border border-indigo-200 hover:bg-indigo-50 font-semibold py-3 rounded-xl shadow-sm transition">
+                        View Progress & Settings
+                    </button>
+                    <button onclick="showPage('setup')" class="bg-white text-indigo-700 border border-indigo-200 hover:bg-indigo-50 font-semibold py-3 rounded-xl shadow-sm transition">
+                        Set Up New Quiz
+                    </button>
                 </div>
-                <button id="new-quiz-button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-md transition duration-150 ease-in-out">
-                    End Quiz
-                </button>
             </div>
+        </div>
 
-             <!-- Navigation to Page 2 -->
-             <div class="flex justify-center mt-6">
-                <button id="to-stats-btn" class="bg-white/80 hover:bg-white text-indigo-800 font-bold py-3 px-6 rounded-xl shadow-md border border-indigo-200 transition flex items-center gap-2 backdrop-blur-sm">
-                    <span>View Progress & Settings</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                    </svg>
-                </button>
-            </div>
 
-        </div> <!-- End Page 1 -->
-
-        <!-- PAGE 2: STATS, SETTINGS & ADMIN -->
+        <!-- ==================================================================================== -->
+        <!--                               PAGE: PROGRESS & SETTINGS                              -->
+        <!-- ==================================================================================== -->
         <div id="page-stats" class="hidden space-y-8">
 
-             <!-- Navigation Back to Page 1 -->
-             <div class="flex justify-start mb-6">
-                <button id="to-quiz-btn" class="bg-white/80 hover:bg-white text-indigo-800 font-bold py-2 px-4 rounded-xl shadow-md border border-indigo-200 transition flex items-center gap-2 backdrop-blur-sm">
+             <!-- Navigation -->
+             <div class="flex justify-between mb-6">
+                <button onclick="showPage('home')" class="bg-white/80 hover:bg-white text-indigo-800 font-bold py-2 px-4 rounded-xl shadow-md border border-indigo-200 transition flex items-center gap-2 backdrop-blur-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
                     </svg>
-                    <span>Back to Quiz</span>
+                    <span>Home</span>
+                </button>
+                 <button onclick="showPage('setup')" class="bg-white/80 hover:bg-white text-indigo-800 font-bold py-2 px-4 rounded-xl shadow-md border border-indigo-200 transition flex items-center gap-2 backdrop-blur-sm">
+                    <span>Set Up New Quiz</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
                 </button>
             </div>
 
@@ -501,7 +583,6 @@
             </div>
 
             <!-- ADMIN BUTTONS -->
-            <!-- Added disabled styles for when quiz is running -->
             <div class="flex justify-center mt-8 space-x-4">
                 <button id="show-quiz-setup-button" class="text-xs text-gray-500 hover:text-gray-800 hover:underline px-4 py-2 rounded transition border border-transparent hover:border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
                     Quiz System Setup
@@ -922,10 +1003,11 @@
         const pageHeader = document.getElementById('page-header'); 
         
         // Page Views
-        const pageQuiz = document.getElementById('page-quiz');
+        const pageHome = document.getElementById('page-home');
+        const pageSetup = document.getElementById('page-setup');
+        const pageActiveQuiz = document.getElementById('page-active-quiz');
+        const pageResults = document.getElementById('page-results');
         const pageStats = document.getElementById('page-stats');
-        const toStatsBtn = document.getElementById('to-stats-btn');
-        const toQuizBtn = document.getElementById('to-quiz-btn');
 
         // New Player Modal Elements
         const newPlayerModal = document.getElementById('new-player-modal');
@@ -974,9 +1056,7 @@
         const currentPlayerDisplay = document.getElementById('current-player-display');
         const progressPlayerName = document.getElementById('progress-player-name');
         const playerSelect = document.getElementById('player-select'); 
-        const selectionPanel = document.getElementById('selection-panel');
-        const quizPanel = document.getElementById('quiz-panel');
-        const resultsPanel = document.getElementById('results-panel');
+        
         const startQuizButton = document.getElementById('start-quiz-button');
         const endQuizButton = document.getElementById('end-quiz-button');
         
@@ -1001,8 +1081,7 @@
         const calcProgressLabel = document.getElementById('calc-progress-label');
         const calcScreen = document.getElementById('calc-screen');
         const answerInputDisplay = document.getElementById('answer-input-display');
-        const selectionPlayerDisplay = document.getElementById('selection-player-display');
-
+        
         // Admin Modal Elements
         const adminAuthModal = document.getElementById('admin-auth-modal');
         const adminCodeAuthInput = document.getElementById('admin-code-input'); // Auth input
@@ -1020,15 +1099,27 @@
         
         // --- NAVIGATION LOGIC ---
         function showPage(pageName) {
-            if (pageName === 'quiz') {
-                pageQuiz.classList.remove('hidden');
-                pageStats.classList.add('hidden');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Hide All
+            pageHome.classList.add('hidden');
+            pageSetup.classList.add('hidden');
+            pageActiveQuiz.classList.add('hidden');
+            pageResults.classList.add('hidden');
+            pageStats.classList.add('hidden');
+
+            // Show One
+            if (pageName === 'home') {
+                pageHome.classList.remove('hidden');
+            } else if (pageName === 'setup') {
+                pageSetup.classList.remove('hidden');
+            } else if (pageName === 'quiz') {
+                pageActiveQuiz.classList.remove('hidden');
+            } else if (pageName === 'results') {
+                pageResults.classList.remove('hidden');
             } else if (pageName === 'stats') {
-                pageQuiz.classList.add('hidden');
                 pageStats.classList.remove('hidden');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         // --- LOCAL STORAGE FUNCTIONS ---
@@ -1184,13 +1275,9 @@
             // Raw data button is disabled if quiz active OR no player selected
             if (isActive) {
                 showRawDataButton.disabled = true;
-                toStatsBtn.disabled = true; // Disable navigation to stats during quiz
-                toStatsBtn.classList.add('opacity-50', 'cursor-not-allowed');
             } else {
                 // If quiz not active, only enable if player exists
                 showRawDataButton.disabled = (currentPlayerName === null);
-                toStatsBtn.disabled = false;
-                toStatsBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         }
 
@@ -1723,10 +1810,9 @@
                 // Ensure we are on the quiz page when restoring
                 showPage('quiz');
                 
-                pageHeader.classList.add('hidden');
-                selectionPanel.classList.add('hidden');
-                // selectionPlayerDisplay.classList.add('hidden'); // No longer needed
-                quizPanel.classList.remove('hidden');
+                // No longer needed
+                // pageHeader.classList.add('hidden');
+                
                 setQuizActiveState(true); // Disable admin buttons on restore
                 renderQuestion(); 
                 showMessage(`Quiz restored for ${state.name} at question ${currentQuestionIndex + 1}.`, true);
@@ -1855,10 +1941,8 @@
 
         function showResults() {
             sessionStorage.removeItem(QUIZ_STATE_KEY); 
-            pageHeader.classList.remove('hidden');
-            quizPanel.classList.add('hidden');
-            resultsPanel.classList.remove('hidden');
-            // selectionPlayerDisplay.classList.remove('hidden'); // REMOVED: Now inside selection panel
+            
+            showPage('results');
             setQuizActiveState(false); // Re-enable admin buttons
 
             // UPDATE RESULTS NAME
@@ -1896,11 +1980,8 @@
 
         function startNewQuiz() {
             sessionStorage.removeItem(QUIZ_STATE_KEY);
-            pageHeader.classList.remove('hidden');
-            resultsPanel.classList.add('hidden');
-            quizPanel.classList.add('hidden');
-            selectionPanel.classList.remove('hidden');
-            // selectionPlayerDisplay.classList.remove('hidden'); // Not needed
+            showPage('setup');
+            
             setQuizActiveState(false); // Re-enable admin buttons
             document.querySelectorAll('.table-checkbox').forEach(cb => { cb.checked = false; updateLabelClass(cb); });
             updateSelectedTables();
@@ -1910,15 +1991,11 @@
             if (selectedTables.length === 0) return;
             if (!currentPlayerName) { showMessage("Please select or create a player profile first.", false); return; }
 
-            pageHeader.classList.add('hidden');
-            // selectionPlayerDisplay.classList.add('hidden'); // Not needed
             generateQuizQuestions();
-            selectionPanel.classList.add('hidden');
-            quizPanel.classList.remove('hidden');
+            showPage('quiz');
             setQuizActiveState(true); // Disable admin buttons
             renderQuestion();
             saveQuizState(); 
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         
         // --- RAW DATA MODAL FUNCTIONS ---
@@ -2124,7 +2201,12 @@
             renderGrids(); 
             
             // Restore session if exists
-            restoreQuizState();
+            const restored = restoreQuizState();
+            
+            // If no restoration happened, default to home screen
+            if (!restored) {
+                showPage('home');
+            }
             
             // --- NEW PLAYER MODAL LISTENERS ---
             showNewPlayerModalButton.addEventListener('click', showNewPlayerModal);
@@ -2157,10 +2239,6 @@
                     setPlayerProfile(selectedName);
                 }
             });
-
-            // --- NAVIGATION LISTENERS ---
-            toStatsBtn.addEventListener('click', () => showPage('stats'));
-            toQuizBtn.addEventListener('click', () => showPage('quiz'));
 
             // --- TABLE SELECTION BUTTONS ---
             const btnSelectAll = document.getElementById('btn-select-all');
@@ -2207,7 +2285,10 @@
             });
 
             startQuizButton.addEventListener('click', startQuiz);
-            newQuizButton.addEventListener('click', startNewQuiz); 
+            
+            // New Quiz Button functionality replaced by showPage calls in HTML, but keeping this for legacy ref if needed
+            if(newQuizButton) newQuizButton.addEventListener('click', startNewQuiz); 
+            
             endQuizButton.addEventListener('click', showResults);
             
             // --- MANAGE PLAYERS LISTENERS ---
@@ -2285,7 +2366,7 @@
             // Attached to window/document to catch keystrokes when quiz is active
             document.addEventListener('keydown', (e) => {
                 // Only active if the quiz panel is visible and not waiting for transition
-                const isQuizActive = !quizPanel.classList.contains('hidden') && !awaitingNext;
+                const isQuizActive = !pageActiveQuiz.classList.contains('hidden') && !awaitingNext;
                 
                 if (!isQuizActive) return;
 
