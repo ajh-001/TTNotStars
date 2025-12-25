@@ -6,23 +6,12 @@
     <title>TT Not-Stars</title>
     
     <link rel="manifest" href="manifest.json">
+    <script>
+          if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+          }
+    </script>
 
-
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-  }
-</script>
-
-
-    <style>
-        html, body {
-  overscroll-behavior-y: contain;
-}
-    </style> 
-
-
-    
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -36,11 +25,17 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #bababa; /* Updated Default Light Gray */
+            background-color: #bababa; /* Default Light Gray */
             min-height: 100vh;
-            transition: background-color 0.5s ease; /* Smooth transition for color change */
-             }   
+            transition: background-color 0.5s ease;
+            /* Padding top added for the fixed top bar */
+            padding-top: 4rem; 
+        }   
         
+        html, body {
+          overscroll-behavior-y: contain;
+        }
+
         /* Calculator Variables */
         :root {
             --calc-bg: #d1d5db; /* Professional Grey */
@@ -70,9 +65,10 @@
             flex: 1 1 0%;
             min-width: 0;
         }
-        #count-grid > .flex, #time-grid > .flex, #div-count-grid > .flex, #div-time-grid > .flex {
+        #count-grid > .flex, #time-grid > .flex, #div-count-grid > .flex, #div-time-grid > .flex, #results-time-grid > .flex, #results-div-time-grid > .flex {
             width: 100%;
         }
+        
         /* Modal specific styles */
         .modal {
             position: fixed;
@@ -96,7 +92,8 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
             position: relative;
         }
-        /* Slider styling for a better look */
+        
+        /* Slider styling */
         input[type=range] {
             -webkit-appearance: none;
             width: 100%;
@@ -109,7 +106,7 @@
             height: 20px;
             width: 20px;
             border-radius: 50%;
-            background: #4f46e5; /* Indigo 600 */
+            background: #4f46e5;
             cursor: pointer;
             margin-top: -6px; 
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -136,22 +133,22 @@
             box-shadow: 12px 12px 0px rgba(0, 0, 0, 1);
             width: 100%;
             max-width: 420px;
-            margin: 0 auto; /* Center it */
+            margin: 0 auto;
         }
 
         .screen-container {
             background: var(--screen-bg);
-            padding: 15px 15px 25px 15px; /* Increased bottom padding to 25px */
+            padding: 15px 15px 25px 15px;
             border-radius: 8px;
             margin-bottom: 20px;
-            height: 150px; /* Increased height to 150px to fit padding */
+            height: 150px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             position: relative;
             border: var(--border-thick);
             box-shadow: inset 4px 4px 0px rgba(0,0,0,0.1);
-            overflow: hidden; /* Contain the glass effect */
+            overflow: hidden;
         }
 
         .screen-glass {
@@ -241,6 +238,71 @@
 </head>
 <body>
     
+    <!-- Top Navigation Bar -->
+    <header class="fixed top-0 left-0 right-0 h-16 bg-white shadow-md z-[60] flex items-center justify-between px-4 transition-colors duration-300" id="top-bar">
+        <!-- Left: Menu Button -->
+        <button id="menu-btn" class="p-2 text-gray-700 hover:bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+
+        <!-- Center: Page Title -->
+        <h1 id="top-bar-title" class="text-xl font-bold text-gray-800 absolute left-1/2 transform -translate-x-1/2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[40%]">
+            TT Not-Stars
+        </h1>
+
+        <!-- Right: Player Dropdown -->
+        <div class="w-40 sm:w-56">
+            <select id="player-select-top" class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-gray-50 focus:ring-2 focus:ring-indigo-500 outline-none text-gray-700 font-semibold shadow-sm">
+                <option value="" disabled selected>Select Player</option>
+                <!-- JS will populate -->
+            </select>
+        </div>
+    </header>
+
+    <!-- Sidebar Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-[70] hidden transition-opacity opacity-0 duration-300"></div>
+
+    <!-- Sidebar Menu -->
+    <aside id="sidebar" class="fixed top-0 left-0 bottom-0 w-72 bg-white shadow-2xl z-[80] transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+        <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-indigo-50">
+            <span class="font-bold text-xl text-indigo-700 font-mono">MENU</span>
+            <button id="close-sidebar" class="p-1 text-gray-500 hover:text-red-500 hover:bg-white rounded-full transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        
+        <nav class="p-4 space-y-2 flex-grow overflow-y-auto">
+            <button onclick="navToPage('setup')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center gap-3 text-gray-700 font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+                New Quiz Setup
+            </button>
+            <button onclick="navToPage('stats')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center gap-3 text-gray-700 font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Progress Charts
+            </button>
+            <button onclick="navToPage('settings')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center gap-3 text-gray-700 font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Settings
+            </button>
+        </nav>
+        
+        <div class="p-4 border-t border-gray-100 bg-gray-50 text-xs text-center text-gray-400">
+            v1.2.0 • TT Not-Stars
+        </div>
+    </aside>
+
+    
     <div id="app-container" class="container mx-auto p-4 md:p-8">
         
         <div id="splashScreen" class="fixed inset-0 bg-[#789dcc] z-[100] flex flex-col items-center justify-center gap-8 p-6 text-center">
@@ -251,111 +313,19 @@
         </div>
 
         <!-- Notification/Message Box -->
-        <div id="message-box" class="hidden fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-xl z-50 transition-transform duration-300 transform translate-x-full"></div>
-
-        <!-- ==================================================================================== -->
-        <!--                                      PAGE: HOME                                      -->
-        <!-- ==================================================================================== -->
-        <div id="page-home" class="hidden space-y-8">
-            <header id="page-header" class="text-center mb-8 hidden">
-                <h1 class="text-5xl md:text-6xl text-gray-900" style="font-family: 'Kranky';">TT Not-Stars</h1>
-            </header>
-
-            <div class="flex flex-col items-center pt-8">
-                <!-- Static Home Calculator -->
-                <div class="calculator transition-transform duration-300">
-                    <div class="flex justify-between items-end mb-2">
-                            <div class="text-gray-500 text-xs font-bold tracking-widest uppercase">TT Not-Stars Calc</div>
-                            <div class="text-gray-700 text-sm font-bold tracking-wider uppercase font-mono">HOME</div>
-                    </div>
-                    
-                    <div class="screen-container">
-                        <div class="screen-glass"></div>
-                        <div class="stats-bar">
-                            <span>Ready</span>
-                            <span>Input</span> 
-                        </div>
-                        <div class="question-display">TT Not-Stars</div>
-                        <div class="answer-display text-4xl">WELCOME</div>
-                    </div>
-
-                    <div class="grid grid-cols-4 gap-4">
-                        <button class="calc-btn">7</button>
-                        <button class="calc-btn">8</button>
-                        <button class="calc-btn">9</button>
-                        <button class="calc-btn btn-del">C</button>
-                        <button class="calc-btn">4</button>
-                        <button class="calc-btn">5</button>
-                        <button class="calc-btn">6</button>
-                        <button class="calc-btn btn-op">&larr;</button>
-                        <button class="calc-btn">1</button>
-                        <button class="calc-btn">2</button>
-                        <button class="calc-btn">3</button>
-                        <button class="calc-btn btn-op row-span-2 flex items-center justify-center">ENT</button>
-                        <button class="calc-btn col-span-2">0</button>
-                        <button class="calc-btn">.</button>
-                    </div>
-                </div>
-
-                <div class="mt-8 w-full max-w-[420px] space-y-4">
-                    <button onclick="showPage('setup')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xl py-4 rounded-xl shadow-lg transition duration-150 ease-in-out border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1">
-                        Set Up New Quiz
-                    </button>
-                    
-                    <button onclick="showPage('stats')" class="w-full bg-white text-indigo-700 font-bold text-xl py-4 rounded-xl shadow-lg border-2 border-indigo-200 hover:bg-indigo-50 transition duration-150 ease-in-out active:translate-y-1">
-                        View Progress & Settings
-                    </button>
-                </div>
-            </div>
-        </div>
-
+        <div id="message-box" class="hidden fixed top-20 right-4 bg-green-500 text-white p-4 rounded-lg shadow-xl z-50 transition-transform duration-300 transform translate-x-full"></div>
 
         <!-- ==================================================================================== -->
         <!--                                      PAGE: SETUP                                     -->
         <!-- ==================================================================================== -->
         <div id="page-setup" class="hidden space-y-8">
+            <header id="page-header" class="text-center mb-4 mt-2">
+                <h1 class="text-4xl md:text-5xl text-gray-900" style="font-family: 'Kranky';">Welcome</h1>
+                <p id="setup-subtitle" class="text-gray-600 mt-2">Select your tables to begin.</p>
+            </header>
+
             <div id="selection-panel" class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
                 
-                <!-- Player Display -->
-                <div id="selection-player-display" class="mb-4 text-sm text-gray-500 border-b pb-2 flex justify-between items-center">
-                    <div>
-                        <span class="font-semibold">Current Player:</span> 
-                        <span id="current-player-display" class="text-indigo-600 font-bold">Please Select Player</span>
-                    </div>
-                </div>
-
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Setup</h2>
-                    
-                <!-- Player Selection Panel -->
-                <div id="player-selection-panel" class="mb-6 p-4 border rounded-xl bg-gray-50">
-                        
-                    <!-- Existing Player Selection -->
-                    <div>
-                        <label for="player-select" class="font-semibold mb-1 block text-gray-700">Select Existing Player:</label>
-                        
-                        <div class="relative">
-                            <select 
-                                id="player-select" 
-                                class="w-full p-2 border-2 border-gray-300 rounded-lg bg-white text-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition" 
-                                disabled
-                            >
-                                <option value="" disabled selected>-- Select a Player --</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Button to open modal -->
-                    <div class="mt-4 pt-4 border-t border-gray-200 flex justify-start">
-                        <button 
-                            id="show-new-player-modal-button" 
-                            class="bg-white text-blue-600 font-semibold px-4 py-2 rounded-lg shadow-sm border border-gray-300 hover:bg-blue-50 hover:border-blue-400 transition"
-                        >
-                            + Create New Player
-                        </button>
-                    </div>
-                </div>
-
-
                 <!-- Operation Selector -->
                 <div class="mb-6 p-4 border rounded-xl bg-gray-50">
                     <p class="font-semibold mb-2 text-gray-700">Choose Quiz Mode:</p>
@@ -401,22 +371,6 @@
                 <button id="start-quiz-button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-md transition duration-150 ease-in-out disabled:opacity-50" disabled>
                     Select Player and Tables to Start
                 </button>
-
-                <!-- Navigation Back to Home from Setup -->
-                 <div class="mt-6 pt-4 border-t flex flex-col sm:flex-row justify-center gap-4">
-                    <button onclick="showPage('home')" class="text-gray-500 hover:text-gray-800 font-medium flex items-center justify-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        Back to Home
-                    </button>
-                    <button onclick="showPage('stats')" class="text-indigo-600 hover:text-indigo-800 font-medium flex items-center justify-center gap-2 px-4 py-2 rounded-lg hover:bg-indigo-50 transition">
-                        View Progress & Settings
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                    </button>
-                 </div>
             </div>
         </div>
 
@@ -426,7 +380,7 @@
         <!-- ==================================================================================== -->
         <div id="page-active-quiz" class="hidden flex flex-col items-center">
                 
-            <div class="calculator">
+            <div class="calculator mt-4">
                 <!-- Brand / Player Name -->
                 <div class="flex justify-between items-end mb-2">
                         <div class="text-gray-500 text-xs font-bold tracking-widest uppercase">TT Not-Stars Calc</div>
@@ -475,57 +429,85 @@
         <!-- ==================================================================================== -->
         <!--                                     PAGE: RESULTS                                    -->
         <!-- ==================================================================================== -->
-        <div id="page-results" class="hidden text-center bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-            <!-- Added Player Name Display for Results -->
-            <p class="mb-2 text-gray-500 font-semibold">Player: <span id="results-player-name" class="text-indigo-600 font-bold"></span></p>
+        <div id="page-results" class="hidden text-center space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                <!-- Added Player Name Display for Results -->
+                <p class="mb-2 text-gray-500 font-semibold">Player: <span id="results-player-name" class="text-indigo-600 font-bold"></span></p>
 
-            <h2 class="text-4xl font-extrabold text-teal-600 mb-4">Quiz Complete!</h2>
-            <p id="results-summary" class="text-xl text-gray-700 mb-6">You scored X out of 20.</p>
-            <div id="results-details" class="text-left max-h-64 overflow-y-auto p-4 bg-gray-50 rounded-lg shadow-inner mb-6 border">
-                <!-- Detailed results list goes here -->
+                <h2 class="text-4xl font-extrabold text-teal-600 mb-4">Quiz Complete!</h2>
+                <p id="results-summary" class="text-xl text-gray-700 mb-6">You scored X out of 20.</p>
+                <div id="results-details" class="text-left max-h-64 overflow-y-auto p-4 bg-gray-50 rounded-lg shadow-inner mb-6 border">
+                    <!-- Detailed results list goes here -->
+                </div>
+                
+                <div class="mt-6 space-y-3">
+                    <button onclick="navToPage('setup')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-md transition duration-150 ease-in-out">
+                        Start New Quiz
+                    </button>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                         <button onclick="navToPage('stats')" class="bg-white text-indigo-700 border border-indigo-200 hover:bg-indigo-50 font-semibold py-3 rounded-xl shadow-sm transition">
+                            View Progress
+                        </button>
+                        <button onclick="navToPage('settings')" class="bg-white text-indigo-700 border border-indigo-200 hover:bg-indigo-50 font-semibold py-3 rounded-xl shadow-sm transition">
+                            Settings
+                        </button>
+                    </div>
+                </div>
             </div>
             
-            <div class="mt-6 space-y-3">
-                <button onclick="showPage('home')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-md transition duration-150 ease-in-out">
-                    Back to Home
-                </button>
-                
-                <div class="grid grid-cols-2 gap-3">
-                     <button onclick="showPage('stats')" class="bg-white text-indigo-700 border border-indigo-200 hover:bg-indigo-50 font-semibold py-3 rounded-xl shadow-sm transition">
-                        View Progress & Settings
-                    </button>
-                    <button onclick="showPage('setup')" class="bg-white text-indigo-700 border border-indigo-200 hover:bg-indigo-50 font-semibold py-3 rounded-xl shadow-sm transition">
-                        Set Up New Quiz
-                    </button>
+            <!-- Progress Card for Results Page -->
+             <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Current Progress</h2>
+                <div class="space-y-6">
+                    <!-- Average Multiplication Time Grid -->
+                    <div class="bg-slate-50 p-4 rounded-lg shadow-inner border">
+                        <h3 class="text-xl font-semibold mb-3 text-gray-700 flex items-center">
+                            <svg class="w-6 h-6 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Multiplication Time (Avg)
+                        </h3>
+                        <div>
+                            <div id="results-time-grid" class="flex flex-col items-stretch">
+                                <!-- Grid rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Average Division Time Grid -->
+                    <div class="bg-slate-50 p-4 rounded-lg shadow-inner border">
+                        <h3 class="text-xl font-semibold mb-3 text-gray-700 flex items-center">
+                            <svg class="w-6 h-6 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Division Time (Avg)
+                        </h3>
+                        <div>
+                            <div id="results-div-time-grid" class="flex flex-col items-stretch">
+                                <!-- Grid rendered here -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
 
         <!-- ==================================================================================== -->
-        <!--                               PAGE: PROGRESS & SETTINGS                              -->
+        <!--                                   PAGE: PROGRESS                                     -->
         <!-- ==================================================================================== -->
         <div id="page-stats" class="hidden space-y-8">
 
              <!-- Navigation -->
-             <div class="flex justify-between mb-6">
-                <button onclick="showPage('home')" class="bg-white/80 hover:bg-white text-indigo-800 font-bold py-2 px-4 rounded-xl shadow-md border border-indigo-200 transition flex items-center gap-2 backdrop-blur-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+             <!-- <div class="flex justify-between mb-6">
+                 <button onclick="navToPage('setup')" class="bg-white/80 hover:bg-white text-indigo-800 font-bold py-2 px-4 rounded-xl shadow-md border border-indigo-200 transition flex items-center gap-2 backdrop-blur-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
-                    <span>Home</span>
+                    <span>Back to Setup</span>
                 </button>
-                 <button onclick="showPage('setup')" class="bg-white/80 hover:bg-white text-indigo-800 font-bold py-2 px-4 rounded-xl shadow-md border border-indigo-200 transition flex items-center gap-2 backdrop-blur-sm">
-                    <span>Set Up New Quiz</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                </button>
-            </div>
+            </div> -->
 
             <!-- Tracking Panel -->
             <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Progress tables for <span class="text-indigo-600" id="progress-player-name">Player</span></h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Progress for <span class="text-indigo-600" id="progress-player-name">Player</span></h2>
                 <div class="space-y-6">
                     
                     <!-- Average Multiplication Time Grid -->
@@ -568,34 +550,53 @@
                 </div>
             </div>
             
-            <!-- Customization Panel (New) -->
+        </div> <!-- End Page Progress -->
+
+        <!-- ==================================================================================== -->
+        <!--                                   PAGE: SETTINGS                                     -->
+        <!-- ==================================================================================== -->
+        <div id="page-settings" class="hidden space-y-8">
+             
+            <!-- Settings Panel -->
             <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Appearance Settings</h2>
-                <!-- Updated button styling and wrapped in a div for alignment -->
-                <div class="flex justify-start">
-                    <button 
-                        id="show-color-modal-button" 
-                        class="bg-white text-blue-600 font-semibold px-4 py-2 rounded-lg shadow-sm border border-gray-300 hover:bg-blue-50 hover:border-blue-400 transition"
-                    >
-                        Change Background Color
-                    </button>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Settings</h2>
+                
+                <div class="space-y-6">
+                    <!-- Background Color Section -->
+                    <div class="pb-6 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-3">Appearance</h3>
+                         <div class="flex justify-start">
+                            <button 
+                                id="show-color-modal-button" 
+                                class="bg-white text-blue-600 font-semibold px-4 py-2 rounded-lg shadow-sm border border-gray-300 hover:bg-blue-50 hover:border-blue-400 transition"
+                            >
+                                Change Background Color
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Admin Section -->
+                    <div>
+                         <h3 class="text-lg font-semibold text-gray-700 mb-3">Administration</h3>
+                         <p class="text-sm text-gray-500 mb-4">Advanced options for managing the quiz system and data.</p>
+                         
+                        <div class="flex flex-wrap gap-4">
+                            <button id="show-quiz-setup-button" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg transition border border-gray-300">
+                                Quiz System Setup
+                            </button>
+                            <button id="manage-players-button" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg transition border border-gray-300">
+                                Manage Players
+                            </button>
+                            <button id="show-raw-data-button" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg transition border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                Show Player Data
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             </div>
+        </div>
 
-            <!-- ADMIN BUTTONS -->
-            <div class="flex justify-center mt-8 space-x-4">
-                <button id="show-quiz-setup-button" class="text-xs text-gray-500 hover:text-gray-800 hover:underline px-4 py-2 rounded transition border border-transparent hover:border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                    Quiz System Setup
-                </button>
-                <button id="manage-players-button" class="text-xs text-gray-500 hover:text-gray-800 hover:underline px-4 py-2 rounded transition border border-transparent hover:border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                    Manage Players
-                </button>
-                <button id="show-raw-data-button" class="text-xs text-gray-500 hover:text-gray-800 hover:underline px-4 py-2 rounded transition border border-transparent hover:border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                    Show Player Data
-                </button>
-            </div>
-            
-        </div> <!-- End Page 2 -->
     </div>
     
     <!-- Manage Players Modal -->
@@ -788,8 +789,6 @@
             
             <form id="quiz-setup-form" class="space-y-4 max-h-[60vh] overflow-y-auto px-1">
                 
-
-
                 <div class="flex items-center gap-4">
                     <label for="totalQuestions" class="w-2/3 font-medium text-gray-700">
                         Total Questions per Quiz
@@ -804,8 +803,6 @@
                         required
                     >
                 </div>
-
-
 
                 <div class="flex items-center gap-4">
                     <label for="weightThresholdYellow" class="w-2/3 font-medium text-gray-700">
@@ -1002,16 +999,23 @@
         const body = document.body;
         const pageHeader = document.getElementById('page-header'); 
         
+        // Menu Elements
+        const menuBtn = document.getElementById('menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const closeSidebarBtn = document.getElementById('close-sidebar');
+        const topBarTitle = document.getElementById('top-bar-title');
+        const playerSelectTop = document.getElementById('player-select-top');
+
         // Page Views
-        const pageHome = document.getElementById('page-home');
         const pageSetup = document.getElementById('page-setup');
         const pageActiveQuiz = document.getElementById('page-active-quiz');
         const pageResults = document.getElementById('page-results');
         const pageStats = document.getElementById('page-stats');
+        const pageSettings = document.getElementById('page-settings'); // NEW
 
         // New Player Modal Elements
         const newPlayerModal = document.getElementById('new-player-modal');
-        const showNewPlayerModalButton = document.getElementById('show-new-player-modal-button');
         const closeNewPlayerModalButton = document.getElementById('close-new-player-modal-button');
         const newPlayerNameInput = document.getElementById('new-player-name-input');
         const setNewPlayerButton = document.getElementById('set-new-player-button');
@@ -1053,14 +1057,13 @@
         const weightFactorPoorInput = document.getElementById('weightFactorPoor');
         const weightFactorNewInput = document.getElementById('weightFactorNew');
         
-        const currentPlayerDisplay = document.getElementById('current-player-display');
+        // const currentPlayerDisplay = document.getElementById('current-player-display'); // Removed
         const progressPlayerName = document.getElementById('progress-player-name');
-        const playerSelect = document.getElementById('player-select'); 
         
         const startQuizButton = document.getElementById('start-quiz-button');
         const endQuizButton = document.getElementById('end-quiz-button');
         
-        const newQuizButton = document.getElementById('new-quiz-button');
+        // const newQuizButton = document.getElementById('new-quiz-button');
         const questionText = document.getElementById('question-text');
         
         const resultsSummary = document.getElementById('results-summary');
@@ -1095,30 +1098,77 @@
         let score = 0;
         let currentQuestion = null;
         let awaitingNext = false;
+        let waitingForFeedback = false; // NEW: Track if we are showing feedback
         let currentCalcInput = "";
         
-        // --- NAVIGATION LOGIC ---
+        // --- MENU NAVIGATION LOGIC ---
+        function toggleSidebar() {
+            const isClosed = sidebar.classList.contains('-translate-x-full');
+            if (isClosed) {
+                sidebar.classList.remove('-translate-x-full');
+                sidebarOverlay.classList.remove('hidden');
+                // small delay to allow display:block to apply before opacity transition
+                setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10);
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('opacity-0');
+                setTimeout(() => sidebarOverlay.classList.add('hidden'), 300);
+            }
+        }
+
+        function closeSidebar() {
+            if (!sidebar.classList.contains('-translate-x-full')) {
+                toggleSidebar();
+            }
+        }
+
+        // --- PAGE NAVIGATION LOGIC ---
+        function navToPage(pageName) {
+            closeSidebar();
+            
+            // If we are navigating away from an active quiz, ask for confirmation?
+            // For now, we will simply switch view. The quiz state remains in memory 
+            // but the user will be essentially "pausing" or abandoning. 
+            // If they go back to 'quiz' specifically, they might resume if we handle it.
+            // But 'setup' clears quiz.
+            
+            showPage(pageName);
+        }
+
         function showPage(pageName) {
             // Hide All
-            pageHome.classList.add('hidden');
-            pageSetup.classList.add('hidden');
-            pageActiveQuiz.classList.add('hidden');
-            pageResults.classList.add('hidden');
-            pageStats.classList.add('hidden');
+            if(pageSetup) pageSetup.classList.add('hidden');
+            if(pageActiveQuiz) pageActiveQuiz.classList.add('hidden');
+            if(pageResults) pageResults.classList.add('hidden');
+            if(pageStats) pageStats.classList.add('hidden');
+            if(pageSettings) pageSettings.classList.add('hidden');
 
-            // Show One
-            if (pageName === 'home') {
-                pageHome.classList.remove('hidden');
-            } else if (pageName === 'setup') {
+            // Show One & Set Title
+            let title = "TT Not-Stars";
+            if (pageName === 'setup') {
                 pageSetup.classList.remove('hidden');
+                title = "New Quiz Setup";
             } else if (pageName === 'quiz') {
                 pageActiveQuiz.classList.remove('hidden');
+                title = "Quiz in Progress";
             } else if (pageName === 'results') {
                 pageResults.classList.remove('hidden');
+                title = "Quiz Results";
+                renderGrids();
             } else if (pageName === 'stats') {
                 pageStats.classList.remove('hidden');
+                title = "Progress Charts";
+            } else if (pageName === 'settings') {
+                pageSettings.classList.remove('hidden');
+                title = "Settings";
             }
             
+            // Ensure dropdown is enabled if we are not in quiz or results
+            if (pageName !== 'quiz' && pageName !== 'results') {
+                playerSelectTop.disabled = false;
+            }
+
+            if (topBarTitle) topBarTitle.textContent = title;
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -1272,9 +1322,27 @@
             showQuizSetupButton.disabled = isActive;
             managePlayersButton.disabled = isActive;
             
+            // Disable Player Select Dropdown
+            playerSelectTop.disabled = isActive;
+
+            // Disable Sidebar Links
+            const sidebarButtons = document.querySelectorAll('#sidebar nav button');
+            sidebarButtons.forEach(btn => {
+                btn.disabled = isActive;
+                if(isActive) {
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                    btn.classList.remove('hover:bg-indigo-50', 'hover:text-indigo-600');
+                } else {
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    btn.classList.add('hover:bg-indigo-50', 'hover:text-indigo-600');
+                }
+            });
+
             // Raw data button is disabled if quiz active OR no player selected
             if (isActive) {
                 showRawDataButton.disabled = true;
+                // Don't disable top nav, but maybe show warning if they click?
+                // For now, allow navigation.
             } else {
                 // If quiz not active, only enable if player exists
                 showRawDataButton.disabled = (currentPlayerName === null);
@@ -1330,19 +1398,20 @@
             
             // Calculate perceived luminance
             const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b);
+            const luminanceThreshold = 120;
 
-            // Use a threshold (e.g., 120) to decide between light and dark text
-            const luminanceThreshold = 120; // Changed to 120 for better distinction with light gray
-
-            // Remove previous text classes
             const h1Element = pageHeader.querySelector('h1');
-            if (h1Element) {
-                h1Element.classList.remove('text-gray-900', 'text-gray-300');
+            const sub = document.getElementById('setup-subtitle');
             
+            // Apply text colors based on background brightness
+            if (h1Element) {
+                h1Element.classList.remove('text-gray-900', 'text-gray-100');
                 if (luminance < luminanceThreshold) {
-                    h1Element.classList.add('text-gray-300'); // Light text for dark background
+                    h1Element.classList.add('text-gray-100');
+                    if(sub) { sub.classList.remove('text-gray-600'); sub.classList.add('text-gray-300'); }
                 } else {
-                    h1Element.classList.add('text-gray-900'); // Dark text for light background
+                    h1Element.classList.add('text-gray-900');
+                    if(sub) { sub.classList.remove('text-gray-300'); sub.classList.add('text-gray-600'); }
                 }
             }
         }
@@ -1396,7 +1465,7 @@
             // Set global data for current session
             globalData = allPlayersData[normalizedName];
             
-            // Migration Logic (Ensure history array exists for existing entries)
+            // Migration Logic
             [globalData.mulTimes, globalData.divTimes].forEach(dataset => {
                 for (const key in dataset) {
                     const entry = dataset[key];
@@ -1404,25 +1473,22 @@
                         const avg = entry.totalTime / entry.count;
                         const count = Math.min(entry.count, ROLLING_WINDOW);
                         entry.history = Array(count).fill(avg);
-                        delete entry.totalTime; // Clean up old field
+                        delete entry.totalTime; 
                     } else if (!entry.history) {
                         entry.history = [];
                     }
                 }
             });
 
-            // Ensure color field exists and apply the player's color preference
             if (!globalData.hasOwnProperty('backgroundColor')) {
                 globalData.backgroundColor = DEFAULT_COLOR_RGB; 
             }
             applyBackgroundColor(globalData.backgroundColor);
             
-            currentPlayerDisplay.textContent = currentPlayerName;
-            progressPlayerName.textContent = currentPlayerName;
-            calcPlayerBrand.textContent = currentPlayerName;
+            // Update UI
+            if(progressPlayerName) progressPlayerName.textContent = currentPlayerName;
+            if(calcPlayerBrand) calcPlayerBrand.textContent = currentPlayerName;
             
-            // showRawDataButton state managed via setQuizActiveState in other flows, 
-            // but here we ensure it is enabled if no quiz is running (default state)
             if (!isRestoring) {
                  showRawDataButton.disabled = false;
             }
@@ -1442,57 +1508,57 @@
         
         function refreshPlayerList() {
             const players = Object.keys(allPlayersData)
-                .filter(key => key !== SYSTEM_PARAMS_KEY); // Exclude system params key
+                .filter(key => key !== SYSTEM_PARAMS_KEY); 
             renderPlayerList(players);
             updateSelectedTables(); 
         }
         
         function renderPlayerList(players) {
-            const currentSelection = playerSelect.value;
-            playerSelect.innerHTML = '<option value="" disabled selected>-- Select a Player --</option>'; 
-
-            if (players.length === 0) {
-                playerSelect.disabled = true;
-                return;
-            }
+            // Populate the Top Bar Dropdown
+            playerSelectTop.innerHTML = '';
             
-            playerSelect.disabled = false;
+            // Add default "Select Player" option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = "";
+            defaultOption.textContent = "Select Player";
+            defaultOption.disabled = true;
+            if(!currentPlayerName) defaultOption.selected = true;
+            playerSelectTop.appendChild(defaultOption);
+
             players.sort((a, b) => a.localeCompare(b));
 
             players.forEach(name => {
                 const option = document.createElement('option');
                 option.textContent = name;
                 option.value = name;
-                
-                if (name === currentPlayerName || name === currentSelection) {
+                if (name === currentPlayerName) {
                     option.selected = true; 
-                    playerSelect.value = name;
                 }
-
-                playerSelect.appendChild(option);
+                playerSelectTop.appendChild(option);
             });
             
-            if (currentPlayerName) {
-                // If the currently selected player no longer exists (deleted externally), reset.
-                if (!allPlayersData[currentPlayerName]) {
-                     playerSelect.value = "";
-                     currentPlayerDisplay.textContent = "Please Select Player";
-                     progressPlayerName.textContent = "Player";
-                     calcPlayerBrand.textContent = "PLAYER";
-                     currentPlayerName = null;
-                     globalData = JSON.parse(JSON.stringify(DEFAULT_PLAYER_DATA));
-                     // Reset to default color when no user is active
-                     applyBackgroundColor(DEFAULT_PLAYER_DATA.backgroundColor);
-                     renderGrids();
-                     showRawDataButton.disabled = true;
-                     updateSelectedTables();
-                } else {
-                    playerSelect.value = currentPlayerName;
-                }
-            } else {
-                 // Ensure the prompt is selected when no player is active and apply default color
-                 playerSelect.value = ""; 
+            // Separator
+            const sep = document.createElement('option');
+            sep.disabled = true;
+            sep.textContent = "──────────";
+            playerSelectTop.appendChild(sep);
+
+            // Create New Option
+            const createOption = document.createElement('option');
+            createOption.textContent = "+ Create New Player";
+            createOption.value = "_CREATE_NEW_";
+            createOption.className = "text-indigo-600 font-bold";
+            playerSelectTop.appendChild(createOption);
+            
+            // Handle deletion scenario
+            if (currentPlayerName && !allPlayersData[currentPlayerName]) {
+                 playerSelectTop.value = "";
+                 currentPlayerName = null;
+                 globalData = JSON.parse(JSON.stringify(DEFAULT_PLAYER_DATA));
                  applyBackgroundColor(DEFAULT_PLAYER_DATA.backgroundColor);
+                 renderGrids();
+                 showRawDataButton.disabled = true;
+                 updateSelectedTables();
             }
         }
 
@@ -1508,6 +1574,8 @@
         
         function closeNewPlayerModal() {
             newPlayerModal.classList.add('hidden');
+            // Reset dropdown to previous user or default if canceled
+            refreshPlayerList();
         }
 
         function validateAndCreatePlayer() {
@@ -1521,7 +1589,7 @@
             setPlayerProfile(newName);
         }
 
-        // --- MANAGE PLAYERS MODAL FUNCTIONS (UPDATED FOR ADMIN AUTH) ---
+        // --- MANAGE PLAYERS MODAL FUNCTIONS ---
         
         function handleResetClick(btn) {
             const player = btn.dataset.player;
@@ -1529,7 +1597,6 @@
         }
 
         function openManagePlayersModal() {
-            // Filter out system params from the list
             const players = Object.keys(allPlayersData)
                 .filter(key => key !== SYSTEM_PARAMS_KEY)
                 .sort();
@@ -1611,9 +1678,8 @@
                     currentPlayerName = null;
                     globalData = JSON.parse(JSON.stringify(DEFAULT_PLAYER_DATA));
                     
-                    currentPlayerDisplay.textContent = "Please Select Player";
-                    progressPlayerName.textContent = "Player";
-                    calcPlayerBrand.textContent = "PLAYER";
+                    if(progressPlayerName) progressPlayerName.textContent = "Player";
+                    if(calcPlayerBrand) calcPlayerBrand.textContent = "PLAYER";
                     showRawDataButton.disabled = true;
 
                     applyBackgroundColor(DEFAULT_PLAYER_DATA.backgroundColor); 
@@ -1631,7 +1697,7 @@
         function showMessage(text, isSuccess = true) {
             if (isRestoring) return; 
             messageBox.textContent = text;
-            messageBox.className = `fixed top-4 right-4 text-white p-4 rounded-xl shadow-2xl z-50 transition-all duration-300 transform ${isSuccess ? 'bg-green-600' : 'bg-red-600'} translate-x-0`;
+            messageBox.className = `fixed top-20 right-4 text-white p-4 rounded-xl shadow-2xl z-[90] transition-all duration-300 transform ${isSuccess ? 'bg-green-600' : 'bg-red-600'} translate-x-0`;
             messageBox.classList.remove('hidden');
 
             setTimeout(() => {
@@ -1668,7 +1734,7 @@
 
             if (isReady) {
                 startQuizButton.disabled = false;
-                startQuizButton.textContent = `Start Quiz`; // Reflect total questions
+                startQuizButton.textContent = `Start Quiz`; 
             } else if (currentPlayerName === null) {
                 startQuizButton.disabled = true;
                 startQuizButton.textContent = `Select Player to Start`;
@@ -1807,13 +1873,8 @@
                 quizQuestions = state.questions;
                 score = state.score;
                 
-                // Ensure we are on the quiz page when restoring
                 showPage('quiz');
-                
-                // No longer needed
-                // pageHeader.classList.add('hidden');
-                
-                setQuizActiveState(true); // Disable admin buttons on restore
+                setQuizActiveState(true); 
                 renderQuestion(); 
                 showMessage(`Quiz restored for ${state.name} at question ${currentQuestionIndex + 1}.`, true);
                 isRestoring = false; 
@@ -1829,9 +1890,8 @@
         // --- CALCULATOR INPUT FUNCTIONS ---
 
         function addCalcInput(value) {
-            // Prevent multiple decimals
+            if (awaitingNext) return; 
             if (value === '.' && currentCalcInput.includes('.')) return;
-            // Prevent length overflow (aesthetic)
             if (currentCalcInput.length > 8) return; 
 
             currentCalcInput += value;
@@ -1839,17 +1899,18 @@
         }
 
         function clearCalcInput() {
+            if (awaitingNext) return; 
             currentCalcInput = "";
             updateCalcDisplay();
         }
 
         function deleteLastCalcInput() {
+            if (awaitingNext) return; 
             currentCalcInput = currentCalcInput.slice(0, -1);
             updateCalcDisplay();
         }
 
         function updateCalcDisplay() {
-            // Blink cursor effect if empty
             answerInputDisplay.textContent = currentCalcInput === "" ? "_" : currentCalcInput;
         }
 
@@ -1862,12 +1923,12 @@
                 return showResults();
             }
 
-            // Remove flash classes if any leftover
             calcScreen.classList.remove('correct-flash', 'wrong-flash');
+            answerInputDisplay.style.fontSize = ""; 
+            answerInputDisplay.classList.remove('text-red-700', 'text-green-700'); 
 
             currentQuestion = quizQuestions[currentQuestionIndex];
             
-            // Update Top Bar
             calcProgressLabel.textContent = `Q: ${currentQuestionIndex + 1}/${totalQuestions}`;
             
             let questionString = '';
@@ -1879,31 +1940,36 @@
 
             questionText.textContent = questionString;
             
-            // Clear input for new question
             clearCalcInput();
             
             awaitingNext = false;
+            waitingForFeedback = false; 
             quizStartTime = Date.now();
         }
 
         function nextQuestion() {
-            // Not used in manual flow anymore, called by timeout
             currentQuestionIndex++;
             saveQuizState();
             renderQuestion();
         }
 
         async function submitAnswer() {
-            if (awaitingNext) return; // Prevent double submission during flash
+            if (waitingForFeedback) {
+                waitingForFeedback = false;
+                awaitingNext = false; 
+                nextQuestion();
+                return;
+            }
+
+            if (awaitingNext) return; 
             if (!currentPlayerName) { showMessage("Error: No Player", false); return; }
 
-            const userAnswer = parseInt(currentCalcInput, 10);
+            const userAnswer = parseFloat(currentCalcInput);
             if (isNaN(userAnswer)) { 
-                // Perhaps shake screen? For now just return.
                 return; 
             }
 
-            awaitingNext = true; // Lock input
+            awaitingNext = true; 
 
             const actualTimeTaken = (Date.now() - quizStartTime) / 1000;
             currentQuestion.userAnswer = userAnswer;
@@ -1920,30 +1986,47 @@
                 trackB = currentQuestion.answer; 
             }
 
+            waitingForFeedback = true; 
+
             if (currentQuestion.correct) {
                 score++;
                 timeToRecord = parseFloat(actualTimeTaken.toFixed(2));
                 currentQuestion.timeTaken = timeToRecord;
+                
                 calcScreen.classList.add('correct-flash');
+                questionText.textContent = "CORRECT";
+                answerInputDisplay.textContent = `${timeToRecord.toFixed(2)}s`;
             } else {
                 timeToRecord = (typeof systemParams.penaltyTime === 'number') ? systemParams.penaltyTime : 10.00; 
                 currentQuestion.timeTaken = timeToRecord;
+                
                 calcScreen.classList.add('wrong-flash');
+                questionText.textContent = "INCORRECT";
+                
+                let correction = "";
+                if (currentQuestion.operation === 'mul') {
+                    correction = `${currentQuestion.factor1} x ${currentQuestion.factor2} = ${currentQuestion.answer}`;
+                } else {
+                    correction = `${currentQuestion.dividend} ÷ ${currentQuestion.divisor} = ${currentQuestion.answer}`;
+                }
+
+                if (correction.length > 9) {
+                    answerInputDisplay.style.fontSize = "2rem"; 
+                }
+                answerInputDisplay.textContent = correction;
             }
             
             updateTrackingData(trackA, trackB, timeToRecord, currentQuestion.operation); 
-
-            // Automatically move to next question after flash
-            setTimeout(() => {
-                nextQuestion();
-            }, 600); // 500ms for animation + buffer
         }
 
         function showResults() {
             sessionStorage.removeItem(QUIZ_STATE_KEY); 
             
             showPage('results');
-            setQuizActiveState(false); // Re-enable admin buttons
+            setQuizActiveState(false); 
+            
+            // Explicitly disable player dropdown on results page
+            playerSelectTop.disabled = true;
 
             // UPDATE RESULTS NAME
             const resultsPlayerName = document.getElementById('results-player-name');
@@ -1976,15 +2059,7 @@
             score = 0;
             quizQuestions = [];
             awaitingNext = false;
-        }
-
-        function startNewQuiz() {
-            sessionStorage.removeItem(QUIZ_STATE_KEY);
-            showPage('setup');
-            
-            setQuizActiveState(false); // Re-enable admin buttons
-            document.querySelectorAll('.table-checkbox').forEach(cb => { cb.checked = false; updateLabelClass(cb); });
-            updateSelectedTables();
+            waitingForFeedback = false; 
         }
 
         function startQuiz() {
@@ -1993,7 +2068,7 @@
 
             generateQuizQuestions();
             showPage('quiz');
-            setQuizActiveState(true); // Disable admin buttons
+            setQuizActiveState(true); 
             renderQuestion();
             saveQuizState(); 
         }
@@ -2009,7 +2084,6 @@
             modalPlayerName.textContent = currentPlayerName;
             rawDataError.classList.add('hidden'); 
             
-            // NOTE: GlobalData contains the current active player's data
             const formattedJson = JSON.stringify(globalData, null, 2); 
             rawDataContent.value = formattedJson; 
             
@@ -2048,14 +2122,12 @@
             rawDataError.classList.add('hidden');
             
             try {
-                // Update global data and save to main storage object
                 globalData = newPlayerData;
                 allPlayersData[currentPlayerName] = globalData;
                 saveAllData();
                 
                 closeRawDataModal();
                 showMessage(`Raw data successfully saved for ${currentPlayerName}.`, true);
-                // Important: Apply new background color if it was changed via raw data
                 if (globalData.backgroundColor) {
                     applyBackgroundColor(globalData.backgroundColor);
                 }
@@ -2081,34 +2153,24 @@
             
             if (timeData) {
                 if (!timeData.history) timeData.history = [];
-                
-                // Add new time to history
                 timeData.history.push(timeToRecord);
-                
-                // Trim to window size (Keep last 5)
                 if (timeData.history.length > ROLLING_WINDOW) {
                     timeData.history.shift(); 
                 }
-                
-                // Cleanup legacy fields if present
                 if (timeData.totalTime !== undefined) delete timeData.totalTime;
-
                 timeData.count = (timeData.count || 0) + 1;
             } else {
                 globalData[timeField][canonicalKey] = { history: [timeToRecord], count: 1 };
             }
             
-            // Recalculate total answered
             let totalAnswered = 0;
             for (const key in globalData.mulTimes) totalAnswered += globalData.mulTimes[key].count || 0;
             for (const key in globalData.divTimes) totalAnswered += globalData.divTimes[key].count || 0;
             globalData.totalAnswered = totalAnswered;
 
-            // Commit to Local Storage
             allPlayersData[currentPlayerName] = globalData;
             saveAllData();
             
-            // Re-render grids to show updates immediately
             renderGrids();
         }
 
@@ -2116,12 +2178,18 @@
 
         function renderGrids() {
             totalQuestionsAnsweredDisplay.textContent = globalData.totalAnswered.toLocaleString();
-            renderGrid('time-grid', 'mul');
-            renderGrid('div-time-grid', 'div');
+            
+            if (document.getElementById('time-grid')) renderGrid('time-grid', 'mul');
+            if (document.getElementById('div-time-grid')) renderGrid('div-time-grid', 'div');
+
+            if (document.getElementById('results-time-grid')) renderGrid('results-time-grid', 'mul');
+            if (document.getElementById('results-div-time-grid')) renderGrid('results-div-time-grid', 'div');
         }
 
         function renderGrid(containerId, operation) {
             const container = document.getElementById(containerId);
+            if (!container) return; 
+
             let html = '';
             const dataSet = operation === 'mul' ? globalData.mulTimes : globalData.divTimes;
             
@@ -2186,7 +2254,7 @@
             document.querySelectorAll('.table-checkbox').forEach(checkbox => {
                 checkbox.addEventListener('change', (e) => {
                     updateSelectedTables();
-                    updateLabelClass(e.target);
+                    updateLabelClass(checkbox);
                 });
                 updateLabelClass(checkbox);
             });
@@ -2195,21 +2263,35 @@
 
         window.onload = () => {
             loadAllData();
-            updateQuizUIParams(); // Load initial total questions number
+            updateQuizUIParams(); 
             refreshPlayerList();
             renderTableCheckboxes();
             renderGrids(); 
             
+            // MENU LISTENERS
+            menuBtn.addEventListener('click', toggleSidebar);
+            closeSidebarBtn.addEventListener('click', closeSidebar);
+            sidebarOverlay.addEventListener('click', closeSidebar);
+            
+            // TOP BAR PLAYER SELECT
+            playerSelectTop.addEventListener('change', (e) => {
+                const val = e.target.value;
+                if (val === '_CREATE_NEW_') {
+                    showNewPlayerModal();
+                    // Reset to a safe value or just keep it there visually until modal closes
+                } else if (val) {
+                    setPlayerProfile(val);
+                }
+            });
+
             // Restore session if exists
             const restored = restoreQuizState();
             
-            // If no restoration happened, default to home screen
             if (!restored) {
-                showPage('home');
+                showPage('setup');
             }
             
             // --- NEW PLAYER MODAL LISTENERS ---
-            showNewPlayerModalButton.addEventListener('click', showNewPlayerModal);
             closeNewPlayerModalButton.addEventListener('click', closeNewPlayerModal);
             
             newPlayerModal.addEventListener('click', (e) => {
@@ -2229,14 +2311,6 @@
                 if (e.key === 'Enter' && setNewPlayerButton.disabled === false) { 
                     e.preventDefault(); 
                     validateAndCreatePlayer();
-                }
-            });
-
-            // --- PLAYER SELECT DROPDOWN LISTENER ---
-            playerSelect.addEventListener('change', (e) => {
-                const selectedName = e.target.value;
-                if (selectedName) {
-                    setPlayerProfile(selectedName);
                 }
             });
 
@@ -2265,13 +2339,8 @@
                 const checkboxes = Array.from(document.querySelectorAll('.table-checkbox'));
                 // Reset
                 checkboxes.forEach(cb => { cb.checked = false; updateLabelClass(cb); });
-                
-                // Random number of tables (1 to 12)
                 const numberOfTables = Math.floor(Math.random() * 12) + 1;
-                
-                // Shuffle and slice
                 const shuffled = checkboxes.sort(() => 0.5 - Math.random());
-                
                 shuffled.slice(0, numberOfTables).forEach(cb => {
                     cb.checked = true;
                     updateLabelClass(cb);
@@ -2285,10 +2354,6 @@
             });
 
             startQuizButton.addEventListener('click', startQuiz);
-            
-            // New Quiz Button functionality replaced by showPage calls in HTML, but keeping this for legacy ref if needed
-            if(newQuizButton) newQuizButton.addEventListener('click', startNewQuiz); 
-            
             endQuizButton.addEventListener('click', showResults);
             
             // --- MANAGE PLAYERS LISTENERS ---
@@ -2307,12 +2372,10 @@
                 if(e.target === colorModal) closeColorModal();
             });
 
-            // Slider update event listeners (live preview)
             [sliderR, sliderG, sliderB].forEach(slider => {
                 slider.addEventListener('input', updateColorDisplay);
             });
 
-            // Apply button handler
             applyColorButton.addEventListener('click', () => {
                 if (!currentPlayerName) { 
                     showMessage("Please select a player before setting a custom color.", false); 
@@ -2322,9 +2385,7 @@
                 const g = sliderG.value;
                 const b = sliderB.value;
                 const newColor = `rgb(${r}, ${g}, ${b})`;
-                
                 savePlayerColorPreference(newColor);
-                
                 closeColorModal();
                 showMessage(`Background color applied: RGB(${r}, ${g}, ${b})`, true);
             });
@@ -2338,7 +2399,6 @@
             });
             resetSystemParamsButton.addEventListener('click', resetSystemParams);
             
-            // Use the form submit event to handle validation and saving
             quizSetupForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 saveSystemParams();
@@ -2347,12 +2407,9 @@
             // --- RAW DATA LISTENERS ---
             showRawDataButton.addEventListener('click', showRawDataModal);
             closeModalButton.addEventListener('click', closeRawDataModal);
-            
-            // Updated to use Admin Auth instead of direct save
             saveModalButton.addEventListener('click', (e) => {
                  requestAdminAuth(saveRawDataChanges);
             }); 
-            
             rawDataModal.addEventListener('click', (e) => {
                 if (e.target === rawDataModal) { closeRawDataModal(); }
             });
@@ -2363,87 +2420,65 @@
             });
 
             // --- GLOBAL KEYBOARD LISTENERS FOR CALCULATOR ---
-            // Attached to window/document to catch keystrokes when quiz is active
             document.addEventListener('keydown', (e) => {
-                // Only active if the quiz panel is visible and not waiting for transition
-                const isQuizActive = !pageActiveQuiz.classList.contains('hidden') && !awaitingNext;
+                const isQuizVisible = !pageActiveQuiz.classList.contains('hidden');
                 
-                if (!isQuizActive) return;
+                if (!isQuizVisible) return;
 
-                // Handle numbers (Numpad or Top row)
-                if ((e.key >= '0' && e.key <= '9') || e.key === '.') {
-                    addCalcInput(e.key);
-                }
-                
-                // Handle Enter
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     submitAnswer();
+                    return;
                 }
 
-                // Handle Backspace
+                if (awaitingNext) return;
+
+                if ((e.key >= '0' && e.key <= '9') || e.key === '.') {
+                    addCalcInput(e.key);
+                }
+
                 if (e.key === 'Backspace') {
                     deleteLastCalcInput();
                 }
 
-                // Handle Escape/Clear
                 if (e.key === 'Escape') {
                     clearCalcInput();
                 }
             });
 
-            // Apply default color on load if no user is yet selected
             if (!currentPlayerName) {
                 applyBackgroundColor(DEFAULT_PLAYER_DATA.backgroundColor);
             }
         };
 
-        //splash screen and backbutton-exit solution
-
         const splash = document.getElementById('splashScreen');
         const enterBtn = document.getElementById('enterBtn');
         const exitModal = document.getElementById('exitModal');
         const stayBtn = document.getElementById('stayBtn');
-        const leaveBtn = document.getElementById('leaveBtn');
 
         let guardActive = false;
 
-        // 1. Initialize protection on "Enter"
         enterBtn.addEventListener('click', () => {
-            // Permission granted by user click
             window.history.pushState({ protected: true }, "");
             guardActive = true;
 
-            // Visual transition
             splash.classList.add('fade-out');
             setTimeout(() => splash.style.display = 'none', 500);
+            
+            showPage('setup');
         });
 
-        // 2. Intercept Back Gesture
         window.addEventListener('popstate', (event) => {
             if (guardActive) {
-                // Show custom alert
                 exitModal.style.display = 'flex';
-                
-                // Push state back so the next swipe also hits popstate
                 window.history.pushState({ protected: true }, "");
             }
         });
 
-        // 3. Stay Button logic
         stayBtn.addEventListener('click', () => {
             exitModal.style.display = 'none';
         });
 
-        // 4. Leave Button logic (Commented out in original but preserved logic here)
-        /*leaveBtn.addEventListener('click', () => {
-            guardActive = false;
-            // Try to close, if it fails (security), go to blank page
-            window.close();
-            location.href = "about:blank";
-        });*/
-
-        // 5. Native Backup (Tab close/Refresh)
         window.onbeforeunload = function(e) {
             if (guardActive) {
                 e.preventDefault();
