@@ -6,12 +6,14 @@
     <title>TT Not-Stars</title>
     
     <link rel="manifest" href="manifest.json">
+
     <script>
-          if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js');
-          }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
     </script>
 
+    
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -240,24 +242,31 @@
     
     <!-- Top Navigation Bar -->
     <header class="fixed top-0 left-0 right-0 h-16 bg-white shadow-md z-[60] flex items-center justify-between px-4 transition-colors duration-300" id="top-bar">
-        <!-- Left: Menu Button -->
-        <button id="menu-btn" class="p-2 text-gray-700 hover:bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        <!-- Left: Menu Button & Title -->
+        <div class="flex items-center gap-3 overflow-hidden flex-grow mr-2">
+            <button id="menu-btn" class="p-2 text-gray-700 hover:bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+
+            <!-- Page Title (Left Aligned) -->
+            <h1 id="top-bar-title" class="text-xl font-bold text-gray-800 whitespace-nowrap overflow-hidden text-ellipsis">
+                TT Not-Stars
+            </h1>
+        </div>
+
+        <!-- Right: Player Dropdown with Icon -->
+        <div class="flex items-center gap-2 flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-        </button>
-
-        <!-- Center: Page Title -->
-        <h1 id="top-bar-title" class="text-xl font-bold text-gray-800 absolute left-1/2 transform -translate-x-1/2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[40%]">
-            TT Not-Stars
-        </h1>
-
-        <!-- Right: Player Dropdown -->
-        <div class="w-40 sm:w-56">
-            <select id="player-select-top" class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-gray-50 focus:ring-2 focus:ring-indigo-500 outline-none text-gray-700 font-semibold shadow-sm">
-                <option value="" disabled selected>Select Player</option>
-                <!-- JS will populate -->
-            </select>
+            <div class="w-32 sm:w-48">
+                <select id="player-select-top" class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-gray-50 focus:ring-2 focus:ring-indigo-500 outline-none text-gray-700 font-semibold shadow-sm">
+                    <option value="" disabled selected>Select Player</option>
+                    <!-- JS will populate -->
+                </select>
+            </div>
         </div>
     </header>
 
@@ -321,7 +330,7 @@
         <div id="page-setup" class="hidden space-y-8">
             <header id="page-header" class="text-center mb-4 mt-2">
                 <h1 class="text-4xl md:text-5xl text-gray-900" style="font-family: 'Kranky';">Welcome</h1>
-                <p id="setup-subtitle" class="text-gray-600 mt-2">Select your tables to begin.</p>
+                <p id="setup-subtitle" class="text-gray-600 mt-2">Select your player & tables to begin.</p>
             </header>
 
             <div id="selection-panel" class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
@@ -507,7 +516,7 @@
 
             <!-- Tracking Panel -->
             <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Progress for <span class="text-indigo-600" id="progress-player-name">Player</span></h2>
+                <!-- <h2 class="text-2xl font-bold text-gray-800 mb-4">Progress for <span class="text-indigo-600" id="progress-player-name">Player</span></h2> -->
                 <div class="space-y-6">
                     
                     <!-- Average Multiplication Time Grid -->
@@ -559,7 +568,7 @@
              
             <!-- Settings Panel -->
             <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Settings</h2>
+                <!-- <h2 class="text-2xl font-bold text-gray-800 mb-4">Settings</h2> -->
                 
                 <div class="space-y-6">
                     <!-- Background Color Section -->
@@ -581,13 +590,17 @@
                          <p class="text-sm text-gray-500 mb-4">Advanced options for managing the quiz system and data.</p>
                          
                         <div class="flex flex-wrap gap-4">
-                            <button id="show-quiz-setup-button" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg transition border border-gray-300">
+                            <button id="show-quiz-setup-button" class="bg-white text-blue-600 font-semibold px-4 py-2 rounded-lg shadow-sm border border-gray-300 hover:bg-blue-50 hover:border-blue-400 transition">
                                 Quiz System Setup
                             </button>
-                            <button id="manage-players-button" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg transition border border-gray-300">
+                        </div>
+                        <div class="flex justify-start">
+                            <button id="manage-players-button" class="bg-white text-blue-600 font-semibold px-4 py-2 rounded-lg shadow-sm border border-gray-300 hover:bg-blue-50 hover:border-blue-400 transition">
                                 Manage Players
                             </button>
-                            <button id="show-raw-data-button" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg transition border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        </div
+                        <div class="flex justify-start">
+                            <button id="show-raw-data-button" class="bg-white text-blue-600 font-semibold px-4 py-2 rounded-lg shadow-sm border border-gray-300 hover:bg-blue-50 hover:border-blue-400 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400" disabled>
                                 Show Player Data
                             </button>
                         </div>
@@ -1537,11 +1550,7 @@
                 playerSelectTop.appendChild(option);
             });
             
-            // Separator
-            const sep = document.createElement('option');
-            sep.disabled = true;
-            sep.textContent = "──────────";
-            playerSelectTop.appendChild(sep);
+            // Separator removed for cleaner mobile UI
 
             // Create New Option
             const createOption = document.createElement('option');
