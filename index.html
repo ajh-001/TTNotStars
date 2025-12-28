@@ -312,20 +312,55 @@
     </aside>
 
     <div id="app-container" class="container mx-auto p-4 md:p-8">
-        <div id="splashScreen" class="fixed inset-0 bg-[#789dcc] z-[100] flex flex-col items-center justify-center gap-6 p-6 text-center">
-            <div class="flex-1 flex items-center justify-center max-h-[50vh]">
-                <img 
-                    src="tt-icon-512.png" 
-                    alt="App Logo" 
-                    class="w-32 sm:w-48 md:w-64 h-auto object-contain max-w-[70vw]"
-                >
-            </div>
-            <div class="pb-8">
-                <button id="enterBtn" class="px-12 py-4 bg-white text-black rounded-full font-bold text-lg hover:scale-105 transition-transform active:scale-95 shadow-lg">
-                Start
-                </button>
-            </div>
+
+        <div
+  id="splashScreen"
+  class="
+    fixed inset-0 z-[100]
+    bg-[#789dcc]
+    flex flex-col
+    items-center
+    justify-between
+    p-6
+    text-center
+    min-h-[100svh]
+  "
+>
+  <!-- Logo -->
+  <div class="flex flex-1 items-center justify-center w-full">
+    <img
+      src="tt-icon-512.png"
+      alt="App Logo"
+      class="
+        object-contain
+        w-[75vw]
+        max-w-[420px]
+        max-h-[55svh]
+        landscape:max-h-[45svh]
+      "
+    />
+  </div>
+
+  <!-- Button -->
+  <div class="pb-[env(safe-area-inset-bottom)]">
+    <button
+      id="enterBtn"
+      class="
+        px-12 py-4
+        bg-white text-black
+        rounded-full
+        font-bold text-lg
+        shadow-lg
+        transition-transform
+        hover:scale-105
+        active:scale-95
+      "
+    >
+      Start
+    </button>
+  </div>
         </div>
+        
 
         <!-- Notification/Message Box -->
         <div id="message-box" class="hidden fixed top-20 right-4 bg-green-500 text-white p-4 rounded-lg shadow-xl z-[110] transition-transform duration-300 transform translate-x-full"></div>
@@ -2696,6 +2731,7 @@
     </script>
 </body>
 </html>
+
 
 
 
