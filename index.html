@@ -1110,13 +1110,13 @@
             const gain1 = audioCtx.createGain();
             osc1.type = 'triangle';
             osc1.frequency.setValueAtTime(440, now); // C5
-            osc1.frequency.linearRampToValueAtTime(1200, now + 0.6)
+            osc1.frequency.linearRampToValueAtTime(1200, now + 0.3)
             gain1.gain.setValueAtTime(0.5, now);
-            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
             osc1.connect(gain1);
             gain1.connect(audioCtx.destination);
             osc1.start(now);
-            osc1.stop(now + 0.6);
+            osc1.stop(now + 0.3);
 
             //const osc2 = audioCtx.createOscillator();
             //const gain2 = audioCtx.createGain();
@@ -2696,6 +2696,7 @@
     </script>
 </body>
 </html>
+
 
 
 
