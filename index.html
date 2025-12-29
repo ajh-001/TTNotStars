@@ -25,14 +25,14 @@
         /* Calculator Font */
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
 
-        body {
+        html, body {
             font-family: 'Inter', sans-serif;
             background-color: #bababa; /* Default Light Gray */
             min-height: 100vh;
             transition: background-color 0.5s ease;
             /* Padding top added for the fixed top bar */
             padding-top: 4rem; 
-            overscroll-behavior-y: contain; /* Prevents pull-to-refresh on mobile */
+            overscroll-behavior-y: none; /* Prevents pull-to-refresh on mobile */
         }   
         
         /* Calculator Variables */
@@ -304,7 +304,7 @@
         </nav>
         
         <div class="p-4 border-t border-gray-100 bg-gray-50 text-xs text-center text-gray-400">
-            v1.4.1 • TT Not-Stars
+            v1.4.2 • TT Not-Stars
         </div>
     </aside>
 
@@ -1382,9 +1382,9 @@
                     () => {
                         // LEAVE: The state is already popped to the previous page (likely setup).
                         // Just ensure the UI matches the state we fell back to.
-                        const destination = event.state && event.state.page ? event.state.page : 'setup';
+                        // const destination = event.state && event.state.page ? event.state.page : 'setup';
                         // Clean up quiz state
-                        showResults(true); // true = aborted
+                        showResults(true, 'push'); // Changed to PUSH so we don't lose the Setup history
                     }
                 );
                 return;
@@ -2232,11 +2232,11 @@
             updateTrackingData(trackA, trackB, timeToRecord, currentQuestion.operation); 
         }
 
-        function showResults(aborted = false) {
+        function showResults(aborted = false, historyAction = 'replace') {
             sessionStorage.removeItem(QUIZ_STATE_KEY); 
             
             // KEY CHANGE: REPLACE 'quiz' state with 'results' state
-            navToPage('results', 'replace');
+            navToPage('results', historyAction);
             
             playerSelectTop.disabled = true;
 
@@ -2729,5 +2729,4 @@
 
     </script>
 </body>
-
 </html>
