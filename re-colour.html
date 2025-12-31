@@ -1,0 +1,2714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TT Not-Stars</title>
+    
+    <link rel="manifest" href="manifest.json">
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+      }
+    </script>
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Base font for the application */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        /* New font for the title only - Shadows Into Light */
+        @import url('https://fonts.googleapis.com/css2?family=Shadows+Into+Light&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Kranky&display=swap');
+        /* Calculator Font */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+        :root {
+            --primary-hue: 210; /* Default Blue */
+            --glass-bg: rgba(255, 255, 255, 0.2);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-blur: 12px;
+            --header-height: 4rem; /* h-16 */
+            
+            /* Calculator Variables */
+            --calc-bg: #d1d5db; /* Professional Grey */
+            --screen-bg: #9eb89a;
+            --screen-text: #1a2a1a;
+            --btn-num: #ffffff;
+            --btn-op: #f39c12;
+            --btn-del: #e74c3c;
+            --border-thick: 6px solid #000000;
+        }
+
+        .dynamic-bg {
+            /* Dynamic gradient based on the selected hue */
+            background: linear-gradient(135deg, 
+                hsl(var(--primary-hue), 70%, 40%) 0%, 
+                hsl(var(--primary-hue), 80%, 10%) 100%);
+            transition: background 0.5s ease;
+        }
+
+        html, body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100dvh;
+            color: white;
+            overscroll-behavior-y: none;
+        }
+        
+        /* Apply dynamic background to body */
+        body {
+            padding-top: calc(var(--header-height) + env(safe-area-inset-top));
+            background: linear-gradient(135deg, 
+                hsl(var(--primary-hue), 70%, 40%) 0%, 
+                hsl(var(--primary-hue), 80%, 10%) 100%);
+            transition: background 0.5s ease;
+        }
+
+        /* Glassmorphism Class */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border);
+        }
+        
+        /* Sliders */
+        input[type=range] {
+            accent-color: hsl(var(--primary-hue), 80%, 60%);
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.2);
+            -webkit-appearance: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: hsl(var(--primary-hue), 80%, 60%);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .color-preview {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid white;
+            background-color: hsl(var(--primary-hue), 80%, 60%);
+        }
+
+        .container {
+            max-width: 1200px;
+        }
+        .grid-cell {
+            padding: 0.5rem 0.2rem;
+            height: auto;
+            min-height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem; 
+            font-weight: 600;
+            transition: all 0.2s;
+            cursor: default;
+            white-space: nowrap;
+            flex: 1 1 0%;
+            min-width: 0;
+            color: #1a2a1a; 
+        }
+  
+  /* New style for selected quiz mode/table buttons */
+.active-selection {
+    background-color: rgba(255, 255, 255, 0.45) !important;
+    border-color: rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+/* Hide the default radio buttons to treat the whole label as a button */
+input[type="radio"].form-radio {
+    display: none;
+}
+
+        
+        /* Modal specific styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: rgba(30, 30, 30, 0.95);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .fade-out {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        .modal-hidden {
+            display: none;
+        }
+
+        /* --- Calculator Specific Styles --- */
+        .calculator {
+            background: var(--calc-bg);
+            padding: 20px;
+            border-radius: 20px;
+            border: var(--border-thick);
+            box-shadow: 12px 12px 0px rgba(0, 0, 0, 1); 
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+
+        .screen-container {
+            background: var(--screen-bg);
+            padding: 15px 15px 25px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            border: var(--border-thick);
+            box-shadow: inset 4px 4px 0px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .screen-glass {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .question-display {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--screen-text);
+            font-size: 1.5rem;
+            text-align: right;
+            font-weight: 700;
+            z-index: 5;
+        }
+
+        .answer-display {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--screen-text);
+            font-size: 3rem;
+            text-align: right;
+            font-weight: 700;
+            min-height: 4.5rem;
+            z-index: 5;
+            overflow: hidden;
+        }
+
+        .calc-btn {
+            background: var(--btn-num);
+            border: var(--border-thick);
+            border-radius: 12px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #000000;
+            transition: all 0.1s;
+            cursor: pointer;
+            padding: 15px 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            box-shadow: 4px 4px 0px #000000; 
+        }
+
+        .calc-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px #000000;
+        }
+
+        .btn-op {
+            background: var(--btn-op);
+        }
+
+        .btn-del {
+            background: var(--btn-del);
+            color: white;
+        }
+
+        .stats-bar {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            color: var(--screen-text);
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-weight: 700;
+            z-index: 5;
+        }
+
+        @keyframes flash-green {
+            0% { background-color: var(--screen-bg); }
+            50% { background-color: #2ecc71; }
+            100% { background-color: var(--screen-bg); }
+        }
+
+        @keyframes flash-red {
+            0% { background-color: var(--screen-bg); }
+            50% { background-color: #e74c3c; }
+            100% { background-color: var(--screen-bg); }
+        }
+
+        .correct-flash { animation: flash-green 0.5s ease-out; }
+        .wrong-flash { animation: flash-red 0.5s ease-out; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1); 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3); 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.5); 
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Background Music Loop -->
+    <audio id="bgMusic" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    </audio>
+    
+    <!-- Top Navigation Bar (Glass) -->
+    <header class="fixed top-0 left-0 right-0 h-16 glass z-[60] flex items-center justify-between px-4 transition-colors duration-300" id="top-bar"
+        style="padding-top: env(safe-area-inset-top); height: calc(4rem + env(safe-area-inset-top));">
+        <!-- Left: Menu Button & Title -->
+        <div class="flex items-center gap-3 overflow-hidden flex-grow mr-2">
+            <button id="menu-btn" class="p-2 text-white/90 hover:bg-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/30 flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+
+            <!-- Page Title (Left Aligned) -->
+            <h1 id="top-bar-title" class="text-xl font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis text-shadow-sm">
+                TT Not-Stars
+            </h1>
+        </div>
+
+        <!-- Right: Player Dropdown with Icon -->
+        <div class="flex items-center gap-2 flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <div class="w-32 sm:w-48">
+                <select id="player-select-top" class="w-full p-2 border border-white/20 rounded-lg text-sm bg-black/20 focus:ring-2 focus:ring-white/30 outline-none text-white font-semibold shadow-sm">
+                    <option value="" disabled selected class="text-gray-800">Select Player</option>
+                    <!-- JS will populate -->
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-[70] hidden transition-opacity opacity-0 duration-300 backdrop-blur-sm"></div>
+
+    <!-- Sidebar Menu (Glass) -->
+    <aside id="sidebar" class="fixed top-0 left-0 bottom-0 w-72 glass z-[80] transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col border-r border-white/10">
+        <div class="p-5 border-b border-white/10 flex justify-between items-center bg-white/5">
+            <span class="font-bold text-xl text-white font-mono tracking-widest">MENU</span>
+            <button id="close-sidebar" class="p-1 text-white/50 hover:text-red-400 hover:bg-white/10 rounded-full transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        
+        <nav class="p-4 space-y-2 flex-grow overflow-y-auto">
+            <button onclick="navToPage('setup')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-white/10 transition flex items-center gap-3 text-white/90 font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+                New Quiz Setup
+            </button>
+            <button onclick="navToPage('stats')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-white/10 transition flex items-center gap-3 text-white/90 font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Progress Charts
+            </button>
+            <button onclick="navToPage('settings')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-white/10 transition flex items-center gap-3 text-white/90 font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Settings
+            </button>
+        </nav>
+        
+        <div class="p-4 border-t border-white/10 bg-white/5 text-xs text-center text-white/40">
+            v1.5.0 • TT Not-Stars
+        </div>
+    </aside>
+
+    <div id="app-container" class="container mx-auto p-4 md:p-8">
+
+        <!-- Splash Screen with Dynamic Gradient Background -->
+        <div
+        id="splashScreen"
+        class="
+            fixed inset-0 z-[100]
+            flex flex-col
+            items-center
+            justify-between
+            p-6
+            text-center
+            min-h-[100svh]
+            dynamic-bg
+        "
+        >
+        <!-- Logo -->
+        <div class="flex flex-1 items-center justify-center w-full">
+            <img
+            src="tt-icon-512.png"
+            alt="App Logo"
+            class="
+                object-contain
+                w-[75vw]
+                max-w-[420px]
+                max-h-[55svh]
+                landscape:max-h-[45svh]
+            "
+            onerror="this.style.display='none'; this.parentElement.innerHTML='<h1 class=\'text-6xl text-white font-[Kranky]\'>TT Not-Stars</h1>'"
+            />
+        </div>
+
+        <!-- Button -->
+        <div class="pb-[env(safe-area-inset-bottom)]">
+            <button
+            id="enterBtn"
+            class="
+                px-12 py-4
+                bg-white text-black
+                rounded-full
+                font-bold text-lg
+                shadow-lg
+                transition-transform
+                hover:scale-105
+                active:scale-95
+            "
+            >
+            Start
+            </button>
+        </div>
+        </div>
+        
+
+        <!-- Notification/Message Box -->
+        <div id="message-box" class="hidden fixed top-20 right-4 bg-green-500 text-white p-4 rounded-lg shadow-xl z-[110] transition-transform duration-300 transform translate-x-full border border-white/20 backdrop-blur-md"></div>
+
+        <!-- ==================================================================================== -->
+        <!--                                      PAGE: SETUP                                     -->
+        <!-- ==================================================================================== -->
+        <div id="page-setup" class="hidden space-y-8">
+            <header id="page-header" class="text-center mb-4 mt-2">
+              <!--<h1 class="text-4xl md:text-5xl text-white drop-shadow-md" style="font-family: 'Kranky';">Welcome</h1>-->
+                <p id="setup-subtitle" class="text-white/70 mt-2">Select your player & tables to begin.</p>
+            </header>
+
+            <div id="selection-panel" class="glass p-6 rounded-xl shadow-2xl">
+                
+                <!-- Operation Selector -->
+                <div class="mb-6 p-4 border border-white/10 rounded-xl bg-black/20">
+                    <p class="font-semibold mb-2 text-white/90">Choose Quiz Mode:</p>
+                    <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0">
+                        <label class="flex items-center justify-center cursor-pointer glass px-4 py-2 rounded-lg hover:bg-white/10 transition mode-label">
+                            <input type="radio" name="operation-mode" value="multiplication" checked id="mode-mul" class="hidden">
+                            <span class="text-white/90 font-medium">Multiplication</span>
+                        </label>
+                        <label class="flex items-center justify-center cursor-pointer glass px-4 py-2 rounded-lg hover:bg-white/10 transition mode-label">
+                            <input type="radio" name="operation-mode" value="division" id="mode-div" class="hidden">
+                            <span class="text-white/90 font-medium">Division</span>
+                        </label>
+                        <label class="flex items-center justify-center cursor-pointer glass px-4 py-2 rounded-lg hover:bg-white/10 transition mode-label">
+                            <input type="radio" name="operation-mode" value="both" id="mode-both" class="hidden">
+                            <span class="text-white/90 font-medium">Both</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Select Tables Section -->
+                <div class="mb-6 p-4 border border-white/10 rounded-xl bg-black/20">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
+                        <p class="font-semibold text-white/90 mb-2 sm:mb-0">Select Tables:</p>
+                    </div>
+
+                    <div class="grid grid-cols-6 sm:grid-cols-12 gap-3" id="table-checkbox-container">
+                        <!-- Checkboxes will be generated here -->
+                    </div>
+
+                    <div class="mt-4 pt-4 border-t border-white/10 grid grid-cols-3 gap-3">
+                        <button id="btn-select-all" class="glass text-white font-semibold py-2 rounded-lg hover:bg-white/20 transition text-center text-sm">
+                        All
+                        </button>
+                        <button id="btn-select-none" class="glass text-white font-semibold py-2 rounded-lg hover:bg-white/20 transition text-center text-sm">
+                        None
+                        </button>
+                        <button id="btn-lucky-dip" class="glass text-white font-semibold py-2 rounded-lg hover:bg-white/20 transition text-center text-sm">
+                        Lucky Dip
+                        </button>
+                    </div>
+                </div>
+                
+                <button id="start-quiz-button" class="glass w-full text-white font-bold py-4 rounded-xl shadow-lg transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10" disabled>
+                    Select Player and Tables to Start
+                </button>
+            </div>
+        </div>
+
+
+        <!-- ==================================================================================== -->
+        <!--                                   PAGE: ACTIVE QUIZ                                  -->
+        <!-- ==================================================================================== -->
+        <div id="page-active-quiz" class="hidden flex flex-col items-center">
+                
+            <div class="calculator mt-4">
+                <!-- Brand / Player Name -->
+                <div class="flex justify-between items-end mb-2">
+                        <div class="text-gray-500 text-xs font-bold tracking-widest uppercase">TT Not-Stars Calc</div>
+                        <div id="calc-player-brand" class="text-gray-700 text-sm font-bold tracking-wider uppercase font-mono">PLAYER</div>
+                </div>
+                
+                <div id="calc-screen" class="screen-container">
+                    <div class="screen-glass"></div>
+                    
+                    <div class="stats-bar">
+                        <span id="calc-progress-label">Q: 1/20</span>
+                        <span>Input</span> 
+                    </div>
+                    
+                    <div id="question-text" class="question-display">READY?</div>
+                    <div id="answer-input-display" class="answer-display">_</div>
+                </div>
+
+                <div class="grid grid-cols-4 gap-4">
+                    <button class="calc-btn" onclick="addCalcInput('7')">7</button>
+                    <button class="calc-btn" onclick="addCalcInput('8')">8</button>
+                    <button class="calc-btn" onclick="addCalcInput('9')">9</button>
+                    <button class="calc-btn btn-del" onclick="clearCalcInput()">C</button>
+
+                    <button class="calc-btn" onclick="addCalcInput('4')">4</button>
+                    <button class="calc-btn" onclick="addCalcInput('5')">5</button>
+                    <button class="calc-btn" onclick="addCalcInput('6')">6</button>
+                    <button class="calc-btn btn-op" onclick="deleteLastCalcInput()">&larr;</button>
+
+                    <button class="calc-btn" onclick="addCalcInput('1')">1</button>
+                    <button class="calc-btn" onclick="addCalcInput('2')">2</button>
+                    <button class="calc-btn" onclick="addCalcInput('3')">3</button>
+                    <button class="calc-btn btn-op row-span-2 flex items-center justify-center" onclick="submitAnswer()">ENT</button>
+
+                    <button class="calc-btn col-span-2" onclick="addCalcInput('0')">0</button>
+                    <button class="calc-btn" onclick="addCalcInput('.')">.</button>
+                </div>
+            </div>
+            
+            <button id="end-quiz-button" class="mt-8 text-sm text-white/70 font-bold hover:text-red-400 transition duration-150 underline">
+                End Quiz Early
+            </button>
+
+        </div>
+
+
+        <!-- ==================================================================================== -->
+        <!--                                     PAGE: RESULTS                                    -->
+        <!-- ==================================================================================== -->
+        <div id="page-results" class="hidden text-center space-y-6">
+            <div class="glass p-6 rounded-xl shadow-2xl">
+                <!-- Added Player Name Display for Results -->
+                <p class="mb-2 text-white/60 font-semibold">Player: <span id="results-player-name" class="text-white font-bold"></span></p>
+
+                <h2 class="text-4xl font-extrabold text-white mb-4 drop-shadow">Quiz Complete!</h2>
+                <p id="results-summary" class="text-xl text-white/90 mb-6">You scored X out of 20.</p>
+                <div id="results-details" class="text-left max-h-64 overflow-y-auto p-4 bg-black/20 rounded-lg shadow-inner mb-6 border border-white/10">
+                    <!-- Detailed results list goes here -->
+                </div>
+                
+                <div class="mt-6 space-y-3">
+                    <button onclick="navToPage('setup')" class="w-full bg-white/10 hover:bg-white/20 text-white font-semibold py-3 rounded-xl shadow-md transition duration-150 ease-in-out border border-white/10">
+                        Start New Quiz
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Progress Card for Results Page -->
+             <div class="glass p-6 rounded-xl shadow-2xl">
+                <h2 class="text-2xl font-bold text-white mb-4">Current Progress</h2>
+                <div class="space-y-6">
+                    <!-- Average Multiplication Time Grid -->
+                    <div class="bg-black/20 p-4 rounded-lg shadow-inner border border-white/10">
+                        <h3 class="text-xl font-semibold mb-3 text-white/80 flex items-center">
+                            <svg class="w-6 h-6 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Multiplication Time (Avg)
+                        </h3>
+                        <div>
+                            <div id="results-time-grid" class="flex flex-col items-stretch">
+                                <!-- Grid rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Average Division Time Grid -->
+                    <div class="bg-black/20 p-4 rounded-lg shadow-inner border border-white/10">
+                        <h3 class="text-xl font-semibold mb-3 text-white/80 flex items-center">
+                            <svg class="w-6 h-6 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Division Time (Avg)
+                        </h3>
+                        <div>
+                            <div id="results-div-time-grid" class="flex flex-col items-stretch">
+                                <!-- Grid rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ==================================================================================== -->
+        <!--                                   PAGE: PROGRESS                                     -->
+        <!-- ==================================================================================== -->
+        <div id="page-stats" class="hidden space-y-8">
+
+            <!-- Tracking Panel -->
+            <div class="glass p-6 rounded-xl shadow-2xl">
+                
+                <div class="space-y-6">
+                    
+                    <!-- Average Multiplication Time Grid -->
+                    <div class="bg-black/20 p-4 rounded-lg shadow-inner border border-white/10">
+                        <h3 class="text-xl font-semibold mb-3 text-white/80 flex items-center">
+                            <svg class="w-6 h-6 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Average Multiplication Response Time
+                        </h3>
+                        <p class="text-sm text-white/50 mb-2" id="mul-time-subtitle">Rolling average of the <strong>last 5 attempts</strong> (Factor 1 across, Factor 2 down)</p>
+                        <div>
+                            <div id="time-grid" class="flex flex-col items-stretch">
+                                <!-- Grid rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Average Division Time Grid -->
+                    <div class="bg-black/20 p-4 rounded-lg shadow-inner border border-white/10">
+                        <h3 class="text-xl font-semibold mb-3 text-white/80 flex items-center">
+                            <svg class="w-6 h-6 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Average Division Response Time
+                        </h3>
+                        <p class="text-sm text-white/50 mb-2" id="div-time-subtitle">Rolling average of the <strong>last 5 attempts</strong> (Divisor across, Answer down)</p>
+                        <div>
+                            <div id="div-time-grid" class="flex flex-col items-stretch">
+                                <!-- Grid rendered here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Questions Answered Box -->
+                    <div class="bg-white/10 p-4 rounded-lg shadow border border-white/10">
+                        <h3 class="text-xl font-semibold mb-1 text-white/80 flex items-center">
+                            <svg class="w-6 h-6 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            Total Questions Answered
+                        </h3>
+                        <p id="total-questions-answered-display" class="text-4xl font-extrabold text-white">0</p>
+                    </div>
+
+                </div>
+            </div>
+            
+        </div> <!-- End Page Progress -->
+
+        <!-- ==================================================================================== -->
+        <!--                                   PAGE: SETTINGS                                     -->
+        <!-- ==================================================================================== -->
+        <div id="page-settings" class="hidden space-y-8">
+             
+            <!-- Settings Panel -->
+            <div class="glass p-6 rounded-xl shadow-2xl border border-white/10">
+                
+                <div class="space-y-6">
+                    <!-- Appearance Section -->
+                    <div class="pb-6 border-b border-white/10">
+                        <h3 class="text-lg font-semibold text-white mb-3">Appearance</h3>
+                         
+                        <!-- Hue Slider Implementation -->
+                        <div class="bg-black/20 p-4 rounded-xl space-y-3">
+                            <div class="flex justify-between items-center">
+                                <label class="text-sm font-semibold uppercase tracking-wider text-white/80">Theme Color</label>
+                                <div class="color-preview" id="colorPreview"></div>
+                            </div>
+                            <input type="range" id="hueSlider" min="0" max="360" value="330" class="w-full cursor-pointer">
+                        </div>
+                    </div>
+                    
+                    <!-- Audio Section -->
+                     <div class="pb-6 border-b border-white/10">
+                        <h3 class="text-lg font-semibold text-white mb-3">Audio</h3>
+                         
+                        <div class="space-y-6 bg-black/20 p-6 rounded-2xl">
+                            <!-- Background Music -->
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <label class="text-xs font-bold uppercase text-white/50">Background Loop</label>
+                                    <button id="musicMute" class="text-sm font-medium text-white hover:text-blue-300 transition">Mute</button>
+                                </div>
+                                <input type="range" id="musicVol" min="0" max="1" step="0.01" value="0.5" class="w-full">
+                            </div>
+
+                            <!-- SFX -->
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <label class="text-xs font-bold uppercase text-white/50">Sound Effects</label>
+                                    <button id="sfxMute" class="text-sm font-medium text-white hover:text-blue-300 transition">Mute</button>
+                                </div>
+                                <input type="range" id="sfxVol" min="0" max="1" step="0.01" value="0.7" class="w-full">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Section -->
+                    <div>
+                         <h3 class="text-lg font-semibold text-white mb-3">Administration</h3>
+                         <p class="text-sm text-white/50 mb-4">Advanced options for managing the quiz system and data.</p>
+                         
+                        <div class="flex flex-col gap-3">
+                            <button id="show-quiz-setup-button" class="glass text-white font-semibold px-4 py-2 rounded-lg shadow-sm border border-white/20 hover:bg-white/10 transition">
+                                Quiz System Setup
+                            </button>
+                        
+                            <button id="manage-players-button" class="glass text-white font-semibold px-4 py-2 rounded-lg shadow-sm border border-white/20 hover:bg-white/10 transition">
+                                Manage Players
+                            </button>
+                
+                            <button id="show-raw-data-button" class="glass text-white font-semibold px-4 py-2 rounded-lg shadow-sm border border-white/20 hover:bg-white/10 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                Show Current Player Data
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+    
+    <!-- Floating Audio Controls (Global) -->
+    <div class="fixed bottom-4 right-4 flex gap-2 z-[150]">
+        <!-- Music Toggle -->
+        <button id="quiz-music-btn" class="p-3 glass rounded-full shadow-xl text-white/80 hover:text-white hover:bg-white/10 transition-all border border-white/20">
+            <svg id="icon-music-on" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+            </svg>
+            <svg id="icon-music-off" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+            </svg>
+        </button>
+
+        <!-- SFX Toggle -->
+        <button id="quiz-mute-btn" class="p-3 glass rounded-full shadow-xl text-white/80 hover:text-white hover:bg-white/10 transition-all border border-white/20">
+            <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>
+            <svg id="icon-sound-off" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+            </svg>
+        </button>
+    </div>
+
+    <!-- Manage Players Modal -->
+    <div id="manage-players-modal" class="modal hidden">
+        <div class="modal-content w-full md:w-3/4 lg:w-1/2">
+            <div class="flex justify-between items-center mb-4 border-b border-white/20 pb-2">
+                <h3 class="text-xl font-bold text-white">Manage Players</h3>
+                <button id="close-manage-modal-button" class="text-white/50 hover:text-white text-2xl font-bold">&times;</button>
+            </div>
+            
+            <div id="manage-players-list" class="space-y-2 max-h-96 overflow-y-auto pr-2">
+                <!-- Player list items will be injected here -->
+            </div>
+            
+            <div class="mt-6 text-right">
+                <button onclick="document.getElementById('manage-players-modal').classList.add('hidden')" class="bg-white/20 hover:bg-white/30 text-white font-semibold px-4 py-2 rounded-lg transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Raw Data Modal -->
+    <div id="raw-data-modal" class="modal hidden">
+        <div class="modal-content w-full md:w-3/4 lg:w-1/2">
+
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-4 border-b border-white/20 pb-2">
+                <h3 class="text-xl font-bold text-white">
+                    Edit Raw Local Data for
+                    <span id="modal-player-name" class="text-blue-400"></span>
+                </h3>
+                <button
+                    id="close-modal-button"
+                    class="text-white/50 hover:text-white text-2xl font-bold">
+                    &times;
+                </button>
+            </div>
+
+            <!-- Editor -->
+            <textarea
+                id="raw-data-content"
+                class="w-full h-96 bg-black/50 p-4 rounded-lg text-sm font-mono overflow-auto resize-none text-white border border-white/20">
+            </textarea>
+
+            <p
+                id="raw-data-error"
+                class="text-red-400 text-sm mt-2 hidden">
+                Invalid JSON format or corrupted data structure.
+            </p>
+
+            <!-- Footer -->
+            <div class="mt-6 flex justify-between items-center">
+                <button
+                    id="export-modal-button"
+                    class="bg-green-600/80 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded-lg shadow transition disabled:opacity-50">
+                    Export
+                </button>
+
+                <div class="flex space-x-3">
+                    <button
+                        onclick="closeRawDataModal()"
+                        class="bg-white/20 hover:bg-white/30 text-white font-semibold px-4 py-2 rounded-lg transition">
+                        Cancel
+                    </button>
+
+                    <button
+                        id="save-modal-button"
+                        class="bg-blue-600/80 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow transition disabled:opacity-50">
+                        Save
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- New Player Modal -->
+    <div id="new-player-modal" class="modal hidden">
+        <div class="modal-content w-full md:w-1/2 lg:w-1/3">
+            <div class="flex justify-between items-center mb-4 border-b border-white/20 pb-2">
+                <h3 class="text-xl font-bold text-white">Create New Player Profile</h3>
+                <button id="close-new-player-modal-button" class="text-white/50 hover:text-white text-2xl font-bold">&times;</button>
+            </div>
+            
+            <label for="new-player-name-input" class="font-semibold mb-1 block text-white/80">Player Name:</label>
+            <div class="flex space-x-2 mt-2">
+                <input 
+                    type="text" 
+                    id="new-player-name-input" 
+                    placeholder="Enter new name" 
+                    class="flex-grow text-lg p-2 border border-white/30 bg-black/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition text-white"
+                    required
+                >
+                <button id="set-new-player-button" class="flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition disabled:opacity-50" disabled>
+                    Create
+                </button>
+            </div>
+            <p id="new-player-error" class="text-red-400 text-sm mt-2 hidden">Player name must be at least 2 characters long.</p>
+        </div>
+    </div>
+    
+    <!-- Admin Auth Modal -->
+    <div id="admin-auth-modal" class="modal hidden">
+        <div class="modal-content w-full max-w-sm text-center">
+            <div class="mb-4 text-blue-500">
+                <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Admin Verification</h3>
+            <p class="text-sm text-white/60 mb-6">Please enter the admin code.</p>
+            
+            <input type="password" id="admin-code-input" class="w-full p-3 border border-white/30 bg-black/30 rounded-lg text-center text-lg mb-4 focus:ring-2 focus:ring-blue-500 outline-none text-white" placeholder="Enter Code" maxlength="10">
+            <p id="admin-auth-error" class="text-red-500 text-sm mb-4 hidden">Incorrect Admin Code.</p>
+
+            <div class="flex space-x-3">
+                <button onclick="closeAdminAuthModal()" class="flex-1 bg-white/20 text-white py-2 rounded-lg font-semibold hover:bg-white/30 transition">Cancel</button>
+                <button onclick="confirmAdminAuth()" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Verify</button>
+            </div>
+        </div>
+    </div>
+
+        <!-- Exit/Quit Guard Modal -->
+    <div id="guardModal" class="modal hidden" style="z-index: 2000;">
+        <div class="modal-content w-full md:w-1/3 lg:w-1/2">
+
+            <h3 id="guard-title" class="text-xl font-bold text-white mb-2">Leave app?</h3>
+            <p id="guard-text" class="text-white/60 mb-8">Leaving now will erase your current session data.</p>
+            
+            <div class="flex flex-col gap-3">
+                <button id="guardStayBtn" class="py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors shadow-lg">
+                    Stay here
+                </button>
+                <button id="guardLeaveBtn" class="py-3 bg-transparent text-red-400 border border-red-400/50 hover:bg-red-900/20 rounded-xl font-semibold transition-colors">
+                    Leave
+                </button>
+            </div>
+        </div>
+    </div>
+
+    
+    <!-- Quiz Setup Modal (NEW) -->
+    <div id="quiz-setup-modal" class="modal hidden">
+        <div class="modal-content w-full md:w-2/3 lg:w-1/2">
+            <div class="flex justify-between items-center mb-4 border-b border-white/20 pb-2">
+                <h3 class="text-xl font-bold text-white">Quiz System Parameters</h3>
+                <button id="close-quiz-setup-button" class="text-white/50 hover:text-white text-2xl font-bold">&times;</button>
+            </div>
+            
+            <form id="quiz-setup-form" class="space-y-4 max-h-[60vh] overflow-y-auto px-1">
+                <!-- Using a simple flex layout for params -->
+                 <div class="space-y-3 text-sm">
+                    <div class="flex items-center justify-between">
+                        <label class="text-white/80">Questions per Quiz</label>
+                        <input type="number" id="totalQuestions" class="w-20 bg-black/30 border border-white/20 rounded p-1 text-center text-white" required>
+                    </div>
+                    <div class="flex items-center justify-between">
+                         <label class="text-white/80">Penalty Time (s)</label>
+                         <input type="number" id="penaltyTime" step="0.1" class="w-20 bg-black/30 border border-white/20 rounded p-1 text-center text-white" required>
+                    </div>
+                    <div class="flex items-center justify-between">
+                         <label class="text-white/80">Yellow Threshold (s)</label>
+                         <input type="number" id="weightThresholdYellow" step="0.1" class="w-20 bg-black/30 border border-white/20 rounded p-1 text-center text-white" required>
+                    </div>
+                    <div class="flex items-center justify-between">
+                         <label class="text-white/80">Red Threshold (s)</label>
+                         <input type="number" id="weightThresholdRed" step="0.1" class="w-20 bg-black/30 border border-white/20 rounded p-1 text-center text-white" required>
+                    </div>
+                    <div class="flex items-center justify-between">
+                         <label class="text-white/80">Weight Factor Yellow</label>
+                         <input type="number" id="weightFactorIntermediate" step="1" class="w-20 bg-black/30 border border-white/20 rounded p-1 text-center text-white" required>
+                    </div>
+                    <div class="flex items-center justify-between">
+                         <label class="text-white/80">Weight Factor Red</label>
+                         <input type="number" id="weightFactorPoor" step="1" class="w-20 bg-black/30 border border-white/20 rounded p-1 text-center text-white" required>
+                    </div>
+                    <div class="flex items-center justify-between">
+                         <label class="text-white/80">Weight Factor New</label>
+                         <input type="number" id="weightFactorNew" step="1" class="w-20 bg-black/30 border border-white/20 rounded p-1 text-center text-white" required>
+                    </div>
+                     <div class="pt-4 border-t border-white/10">
+                        <label class="block text-white/80 mb-1">Admin Access Code</label>
+                        <input type="text" id="adminCode" class="w-full bg-black/30 border border-white/20 rounded p-2 text-white font-mono" required>
+                     </div>
+                 </div>
+
+                <!-- Footer -->
+                <div class="mt-6 flex justify-between items-center pt-4">
+                    <button id="reset-system-params-button" type="button" class="text-yellow-400 hover:text-yellow-300 text-sm font-semibold">
+                        Reset Defaults
+                    </button>
+
+                    <button id="save-system-params-button" type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition shadow-md">
+                        Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+
+        // --- CONSTANTS ---
+        const LS_KEY = 'tt_not_stars_data_v2';
+        const SYSTEM_PARAMS_KEY = '_system_params';
+        const QUIZ_STATE_KEY = 'tt_quiz_state_local'; 
+        
+        // --- AUDIO PREFERENCES KEYS ---
+        const AUDIO_PREFS_KEY = 'tt_audio_prefs';
+        
+        const TOTAL_QUESTIONS_DEFAULT = 20;
+        const PENALTY_TIME_DEFAULT = 10.0;
+        const ADMIN_CODE_DEFAULT = "1234";
+        const WEIGHT_THRESHOLD_YELLOW_DEFAULT = 3.0;
+        const WEIGHT_THRESHOLD_RED_DEFAULT = 9.0;
+        const WEIGHT_FACTOR_GOOD = 1.0; 
+        const WEIGHT_FACTOR_INTERMEDIATE_DEFAULT = 2.0;
+        const WEIGHT_FACTOR_POOR_DEFAULT = 4.0;
+        const WEIGHT_FACTOR_NEW_DEFAULT = 4.0;
+
+        const DEFAULT_SYSTEM_PARAMS = {
+            totalQuestions: TOTAL_QUESTIONS_DEFAULT,
+            penaltyTime: PENALTY_TIME_DEFAULT,
+            adminCode: ADMIN_CODE_DEFAULT,
+            weightThresholdYellow: WEIGHT_THRESHOLD_YELLOW_DEFAULT,
+            weightThresholdRed: WEIGHT_THRESHOLD_RED_DEFAULT,
+            weightFactorIntermediate: WEIGHT_FACTOR_INTERMEDIATE_DEFAULT,
+            weightFactorPoor: WEIGHT_FACTOR_POOR_DEFAULT,
+            weightFactorNew: WEIGHT_FACTOR_NEW_DEFAULT,
+        };
+
+        // --- STATE MANAGEMENT ---
+        let isDataLoaded = false; 
+        let isRestoring = false;
+        let currentPlayerName = null;
+        let currentOperationMode = 'multiplication';
+        let pendingAdminAction = null; 
+        
+        const ROLLING_WINDOW = 5; 
+        
+        const DEFAULT_HUE = 210; // Default Blue
+
+        const DEFAULT_PLAYER_DATA = {
+            mulTimes: {},  
+            divTimes: {}, 
+            totalAnswered: 0, 
+            themeHue: DEFAULT_HUE, 
+        };
+        
+        let systemParams = {};
+        let allPlayersData = {}; 
+        let globalData = JSON.parse(JSON.stringify(DEFAULT_PLAYER_DATA));
+
+        // --- AUDIO SYSTEM STATE ---
+        let audioCtx;
+        const musicEl = document.getElementById('bgMusic');
+      
+      // --- AUDIO VISIBILITY / FOCUS HANDLING ---
+
+// Track whether music was playing before app lost focus
+let wasMusicPlaying = false;
+
+function pauseMusicIfPlaying() {
+    if (musicEl && !musicEl.paused) {
+        wasMusicPlaying = true;
+        musicEl.pause();
+    } else {
+        wasMusicPlaying = false;
+    }
+}
+
+function resumeMusicIfAllowed() {
+    if (
+        musicEl &&
+        wasMusicPlaying &&
+        !audioState.isMusicMuted &&
+        musicEl.paused
+    ) {
+        musicEl.play().catch(() => {
+            // Autoplay may still be blocked; fail silently
+        });
+    }
+}
+      
+      function handleMusicUnmute() {
+    if (
+        !document.hidden &&
+        !audioState.isMusicMuted &&
+        musicEl &&
+        musicEl.paused
+    ) {
+        musicEl.play().catch(() => {
+            // Autoplay may still be blocked
+        });
+    }
+}
+
+
+        
+        let audioState = {
+            musicVol: 0.5,
+            sfxVol: 0.7,
+            isMusicMuted: false,
+            isSfxMuted: false,
+            lastMusicVol: 0.5,
+            lastSfxVol: 0.7
+        };
+
+        function loadAudioPrefs() {
+            const saved = localStorage.getItem(AUDIO_PREFS_KEY);
+            if(saved) {
+                try {
+                    audioState = { ...audioState, ...JSON.parse(saved) };
+                } catch(e) { console.error("Error loading audio prefs"); }
+            }
+            applyAudioSettings();
+        }
+
+        function saveAudioPrefs() {
+            localStorage.setItem(AUDIO_PREFS_KEY, JSON.stringify(audioState));
+        }
+
+        function applyAudioSettings() {
+            // Apply Logic
+            musicEl.volume = audioState.isMusicMuted ? 0 : audioState.musicVol;
+            
+            // Apply UI
+            const musicVolSlider = document.getElementById('musicVol');
+            const sfxVolSlider = document.getElementById('sfxVol');
+            const musicMuteBtn = document.getElementById('musicMute');
+            const sfxMuteBtn = document.getElementById('sfxMute');
+
+            // Update Settings Sliders
+            if(musicVolSlider) {
+                musicVolSlider.value = audioState.isMusicMuted ? 0 : audioState.musicVol;
+                musicMuteBtn.innerText = audioState.isMusicMuted ? "Unmute" : "Mute";
+            }
+            if(sfxVolSlider) {
+                sfxVolSlider.value = audioState.isSfxMuted ? 0 : audioState.sfxVol;
+                sfxMuteBtn.innerText = audioState.isSfxMuted ? "Unmute" : "Mute";
+            }
+
+            // Update Quiz Page Icons
+            updateQuizAudioIcons();
+        }
+        
+        function updateQuizAudioIcons() {
+            // Music Icons
+            const iconMusicOn = document.getElementById('icon-music-on');
+            const iconMusicOff = document.getElementById('icon-music-off');
+            if(iconMusicOn && iconMusicOff) {
+                if(audioState.isMusicMuted) {
+                    iconMusicOn.classList.add('hidden');
+                    iconMusicOff.classList.remove('hidden');
+                } else {
+                    iconMusicOn.classList.remove('hidden');
+                    iconMusicOff.classList.add('hidden');
+                }
+            }
+
+            // SFX Icons
+            const iconSoundOn = document.getElementById('icon-sound-on');
+            const iconSoundOff = document.getElementById('icon-sound-off');
+            if(iconSoundOn && iconSoundOff) {
+                if(audioState.isSfxMuted) {
+                    iconSoundOn.classList.add('hidden');
+                    iconSoundOff.classList.remove('hidden');
+                } else {
+                    iconSoundOn.classList.remove('hidden');
+                    iconSoundOff.classList.add('hidden');
+                }
+            }
+        }
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
+            }
+            // Try to play music if not muted
+            if(!audioState.isMusicMuted && musicEl.paused) {
+                musicEl.play().catch(e => console.log("Autoplay prevented until interaction"));
+            }
+        }
+
+        function playCorrectSound() {
+            if (audioState.isSfxMuted) return;
+            initAudio();
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const now = audioCtx.currentTime;
+            
+            // SFX Volume calculation
+            const vol = audioState.isSfxMuted ? 0 : audioState.sfxVol;
+            if(vol <= 0) return;
+
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            osc1.type = 'triangle';
+            osc1.frequency.setValueAtTime(440, now); 
+            osc1.frequency.linearRampToValueAtTime(1200, now + 0.3)
+            
+            gain1.gain.setValueAtTime(vol * 0.5, now);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+            
+            osc1.connect(gain1);
+            gain1.connect(audioCtx.destination);
+            osc1.start(now);
+            osc1.stop(now + 0.3);
+        }
+
+        function playIncorrectSound() {
+            if (audioState.isSfxMuted) return;
+            initAudio();
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const now = audioCtx.currentTime;
+            
+             // SFX Volume calculation
+            const vol = audioState.isSfxMuted ? 0 : audioState.sfxVol;
+            if(vol <= 0) return;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(440, now);
+            osc.frequency.linearRampToValueAtTime(200, now + 0.3);
+            
+            gain.gain.setValueAtTime(vol * 0.5, now);
+            gain.gain.linearRampToValueAtTime(0.001, now + 0.3);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        }
+      
+      // --- PAGE VISIBILITY (MOST IMPORTANT) ---
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        pauseMusicIfPlaying();
+    } else {
+        resumeMusicIfAllowed();
+    }
+});
+
+// --- WINDOW FOCUS / BLUR (DESKTOP POLISH) ---
+window.addEventListener('blur', pauseMusicIfPlaying);
+window.addEventListener('focus', resumeMusicIfAllowed);
+
+
+
+        // --- UI ELEMENTS ---
+        const body = document.body;
+        const pageHeader = document.getElementById('page-header'); 
+        
+        // Menu Elements
+        const menuBtn = document.getElementById('menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const closeSidebarBtn = document.getElementById('close-sidebar');
+        const topBarTitle = document.getElementById('top-bar-title');
+        const playerSelectTop = document.getElementById('player-select-top');
+
+        // Page Views
+        const pageSetup = document.getElementById('page-setup');
+        const pageActiveQuiz = document.getElementById('page-active-quiz');
+        const pageResults = document.getElementById('page-results');
+        const pageStats = document.getElementById('page-stats');
+        const pageSettings = document.getElementById('page-settings'); 
+
+        // New Player Modal Elements
+        const newPlayerModal = document.getElementById('new-player-modal');
+        const closeNewPlayerModalButton = document.getElementById('close-new-player-modal-button');
+        const newPlayerNameInput = document.getElementById('new-player-name-input');
+        const setNewPlayerButton = document.getElementById('set-new-player-button');
+        const newPlayerError = document.getElementById('new-player-error');
+        
+        // Manage Players Modal Elements
+        const managePlayersModal = document.getElementById('manage-players-modal');
+        const managePlayersButton = document.getElementById('manage-players-button');
+        const closeManageModalButton = document.getElementById('close-manage-modal-button');
+        const managePlayersList = document.getElementById('manage-players-list');
+
+        // Hue Slider Elements
+        const hueSlider = document.getElementById('hueSlider');
+        const colorPreview = document.getElementById('colorPreview');
+        
+        // Quiz Setup Modal Elements (NEW)
+        const quizSetupModal = document.getElementById('quiz-setup-modal');
+        const showQuizSetupButton = document.getElementById('show-quiz-setup-button');
+        const closeQuizSetupButton = document.getElementById('close-quiz-setup-button');
+        const quizSetupForm = document.getElementById('quiz-setup-form');
+        const saveSystemParamsButton = document.getElementById('save-system-params-button');
+        const resetSystemParamsButton = document.getElementById('reset-system-params-button');
+        
+        // Sound Elements
+        const quizMuteBtn = document.getElementById('quiz-mute-btn'); // SFX in quiz
+        const quizMusicBtn = document.getElementById('quiz-music-btn'); // Music in quiz
+
+        const progressPlayerName = document.getElementById('progress-player-name');
+        
+        const startQuizButton = document.getElementById('start-quiz-button');
+        const endQuizButton = document.getElementById('end-quiz-button');
+        
+        const questionText = document.getElementById('question-text');
+        
+        const resultsSummary = document.getElementById('results-summary');
+        const resultsDetails = document.getElementById('results-details');
+        const messageBox = document.getElementById('message-box');
+        const tableCheckboxContainer = document.getElementById('table-checkbox-container'); 
+        const totalQuestionsAnsweredDisplay = document.getElementById('total-questions-answered-display');
+        const showRawDataButton = document.getElementById('show-raw-data-button'); 
+        const rawDataModal = document.getElementById('raw-data-modal');           
+        const modalPlayerName = document.getElementById('modal-player-name');       
+        const rawDataContent = document.getElementById('raw-data-content');         
+        const closeModalButton = document.getElementById('close-modal-button');     
+        const saveModalButton = document.getElementById('save-modal-button');     
+        const rawDataError = document.getElementById('raw-data-error');             
+        const exportModalButton = document.getElementById('export-modal-button');
+        
+        // Calculator specific elements
+        const calcPlayerBrand = document.getElementById('calc-player-brand');
+        const calcProgressLabel = document.getElementById('calc-progress-label');
+        const calcScreen = document.getElementById('calc-screen');
+        const answerInputDisplay = document.getElementById('answer-input-display');
+        
+        // Admin Modal Elements
+        const adminAuthModal = document.getElementById('admin-auth-modal');
+        const adminCodeAuthInput = document.getElementById('admin-code-input');
+        const adminAuthError = document.getElementById('admin-auth-error');
+
+        // Guard Modal
+        const guardModal = document.getElementById('guardModal');
+        const guardTitle = document.getElementById('guard-title');
+        const guardText = document.getElementById('guard-text');
+        const guardStayBtn = document.getElementById('guardStayBtn');
+        const guardLeaveBtn = document.getElementById('guardLeaveBtn');
+
+        // --- QUIZ LOGIC ---
+        let selectedTables = [];
+        let currentQuestionIndex = 0;
+        let quizQuestions = [];
+        let quizStartTime = 0;
+        let score = 0;
+        let currentQuestion = null;
+        let awaitingNext = false;
+        let waitingForFeedback = false; 
+        let currentCalcInput = "";
+        
+        const modeLabels = document.querySelectorAll('.mode-label');
+modeLabels.forEach(label => {
+    label.addEventListener('click', () => {
+        // Remove active class from all labels in this group
+        modeLabels.forEach(l => l.classList.remove('active-selection'));
+        // Add to the clicked one
+        label.classList.add('active-selection');
+    });
+});
+
+// Set the default active state for Multiplication on load
+document.querySelector('label:has(#mode-mul)').classList.add('active-selection');
+
+        
+function closeAllModals() {
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.classList.add('hidden');
+    });
+    document.body.classList.remove('overflow-hidden');
+}
+
+// --- MENU NAVIGATION LOGIC ---
+        function toggleSidebar() {
+            const isClosed = sidebar.classList.contains('-translate-x-full');
+            if (isClosed) {
+                sidebar.classList.remove('-translate-x-full');
+                sidebarOverlay.classList.remove('hidden');
+                setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10);
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('opacity-0');
+                setTimeout(() => sidebarOverlay.classList.add('hidden'), 300);
+            }
+        }
+
+        function closeSidebar() {
+            if (!sidebar.classList.contains('-translate-x-full')) {
+                toggleSidebar();
+            }
+        }
+
+        // --- NEW ROUTER / NAVIGATION LOGIC ---
+
+        function navToPage(pageName, historyMethod = 'push') {
+    closeAllModals();
+            closeSidebar();
+            
+            // Push or Replace state in browser history
+            if (historyMethod === 'push') {
+                history.pushState({ page: pageName }, "", `#${pageName}`);
+            } else if (historyMethod === 'replace') {
+                history.replaceState({ page: pageName }, "", `#${pageName}`);
+            }
+
+            showPage(pageName);
+        }
+
+        function showPage(pageName) {
+            // Hide All
+            if(pageSetup) pageSetup.classList.add('hidden');
+            if(pageActiveQuiz) pageActiveQuiz.classList.add('hidden');
+            if(pageResults) pageResults.classList.add('hidden');
+            if(pageStats) pageStats.classList.add('hidden');
+            if(pageSettings) pageSettings.classList.add('hidden');
+
+            // Show One & Set Title
+            let title = "TT Not-Stars";
+            let activeElement = null;
+
+            if (pageName === 'setup') {
+                pageSetup.classList.remove('hidden');
+                activeElement = pageSetup;
+                title = "New Quiz Setup";
+            } else if (pageName === 'quiz') {
+                pageActiveQuiz.classList.remove('hidden');
+                activeElement = pageActiveQuiz;
+                title = "Quiz in Progress";
+            } else if (pageName === 'results') {
+                pageResults.classList.remove('hidden');
+                activeElement = pageResults;
+                title = "Quiz Results";
+                renderGrids();
+            } else if (pageName === 'stats') {
+                pageStats.classList.remove('hidden');
+                activeElement = pageStats;
+                title = "Progress Charts";
+            } else if (pageName === 'settings') {
+                pageSettings.classList.remove('hidden');
+                activeElement = pageSettings;
+                title = "Settings";
+            }
+            
+            // If we are navigating to a non-quiz page, ensure we aren't stuck in "Quiz Mode"
+            if (pageName !== 'quiz') {
+                setQuizActiveState(false);
+            }
+
+            // Ensure dropdown is enabled if we are not in quiz or results
+            if (pageName !== 'quiz' && pageName !== 'results') {
+                playerSelectTop.disabled = false;
+            }
+
+            if (topBarTitle) topBarTitle.textContent = title;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // --- HISTORY EVENT LISTENER (THE CORE OF SWIPE BACK) ---
+        window.addEventListener('popstate', (event) => {
+    closeAllModals();
+            
+            const isQuizActive = !pageActiveQuiz.classList.contains('hidden');
+            
+            if (isQuizActive) {
+                showGuardModal("Quit Quiz?", "Your progress will be lost.", 
+                    () => {
+                        history.pushState({ page: 'quiz' }, "", "#quiz");
+                    },
+                    () => {
+                        showResults(true, 'push'); 
+                    }
+                );
+                return;
+            }
+
+            // Normal Navigation
+            if (event.state && event.state.page) {
+                showPage(event.state.page);
+            } else {
+                showGuardModal("Exit App?", "Do you want to close the app?", 
+                    () => {
+                        history.pushState({ page: 'setup' }, "", "#setup");
+                        showPage('setup');
+                    }, 
+                    () => {
+                        window.history.back(); 
+                    }
+                );
+            }
+        });
+
+        // Guard Modal Logic
+        function showGuardModal(title, text, onStay, onLeave) {
+            guardTitle.textContent = title;
+            guardText.textContent = text;
+            
+            // STAY CLICK
+            guardStayBtn.onclick = () => {
+                guardModal.classList.add('hidden');
+                if (onStay) onStay();
+            };
+
+            // LEAVE CLICK
+            guardLeaveBtn.onclick = () => {
+                guardModal.classList.add('hidden');
+                if (onLeave) onLeave();
+            };
+
+            guardModal.classList.remove('hidden');
+        }
+
+
+        // --- LOCAL STORAGE FUNCTIONS ---
+        
+        function loadAllData() {
+            try {
+                const stored = localStorage.getItem(LS_KEY);
+                if (stored) {
+                    allPlayersData = JSON.parse(stored);
+                } else {
+                    allPlayersData = {};
+                }
+                
+                systemParams = allPlayersData[SYSTEM_PARAMS_KEY] || JSON.parse(JSON.stringify(DEFAULT_SYSTEM_PARAMS));
+                allPlayersData[SYSTEM_PARAMS_KEY] = systemParams;
+
+                isDataLoaded = true;
+            } catch (e) {
+                console.error("Failed to load local storage data", e);
+                allPlayersData = {};
+                systemParams = JSON.parse(JSON.stringify(DEFAULT_SYSTEM_PARAMS));
+                showMessage("Error loading data from local storage", false);
+            }
+        }
+
+        function saveAllData() {
+            try {
+                localStorage.setItem(LS_KEY, JSON.stringify(allPlayersData));
+            } catch (e) {
+                console.error("Failed to save to local storage", e);
+                showMessage("Error saving data! Storage might be full.", false);
+            }
+        }
+        
+        // --- ADMIN AUTH FUNCTIONS (NEW) ---
+        function requestAdminAuth(action) {
+            pendingAdminAction = action;
+            adminCodeAuthInput.value = '';
+            adminAuthError.classList.add('hidden');
+            adminAuthModal.classList.remove('hidden');
+            adminCodeAuthInput.focus();
+        }
+
+        function closeAdminAuthModal() {
+            adminAuthModal.classList.add('hidden');
+            pendingAdminAction = null;
+        }
+
+        function confirmAdminAuth() {
+            const enteredCode = adminCodeAuthInput.value;
+            const currentCode = systemParams.adminCode || ADMIN_CODE_DEFAULT;
+
+            if (enteredCode === currentCode) {
+                const actionToRun = pendingAdminAction; 
+                closeAdminAuthModal();
+                if (typeof actionToRun === 'function') {
+                    actionToRun();
+                }
+            } else {
+                adminAuthError.classList.remove('hidden');
+                adminCodeAuthInput.value = '';
+                adminCodeAuthInput.focus();
+            }
+        }
+
+        // --- SYSTEM PARAMETER FUNCTIONS ---
+        
+        function openQuizSetupModal() {
+            loadSystemParamsToModal();
+            quizSetupModal.classList.remove('hidden');
+        }
+
+        function closeQuizSetupModal() {
+            quizSetupModal.classList.add('hidden');
+        }
+
+        function loadSystemParamsToModal() {
+            document.getElementById('totalQuestions').value = systemParams.totalQuestions;
+            document.getElementById('penaltyTime').value = systemParams.penaltyTime || PENALTY_TIME_DEFAULT;
+            document.getElementById('adminCode').value = systemParams.adminCode || ADMIN_CODE_DEFAULT;
+            document.getElementById('weightThresholdYellow').value = systemParams.weightThresholdYellow;
+            document.getElementById('weightThresholdRed').value = systemParams.weightThresholdRed;
+            document.getElementById('weightFactorIntermediate').value = systemParams.weightFactorIntermediate;
+            document.getElementById('weightFactorPoor').value = systemParams.weightFactorPoor;
+            document.getElementById('weightFactorNew').value = systemParams.weightFactorNew;
+        }
+        
+        function saveSystemParams() {
+            const newParams = {
+                totalQuestions: parseInt(document.getElementById('totalQuestions').value),
+                penaltyTime: parseFloat(document.getElementById('penaltyTime').value),
+                adminCode: document.getElementById('adminCode').value.trim() || ADMIN_CODE_DEFAULT,
+                weightThresholdYellow: parseFloat(document.getElementById('weightThresholdYellow').value),
+                weightThresholdRed: parseFloat(document.getElementById('weightThresholdRed').value),
+                weightFactorIntermediate: parseInt(document.getElementById('weightFactorIntermediate').value),
+                weightFactorPoor: parseInt(document.getElementById('weightFactorPoor').value),
+                weightFactorNew: parseInt(document.getElementById('weightFactorNew').value),
+            };
+
+            if (newParams.totalQuestions < 5) {
+                showMessage("Total questions must be at least 5.", false);
+                return;
+            }
+
+            systemParams = newParams;
+            allPlayersData[SYSTEM_PARAMS_KEY] = systemParams;
+            saveAllData();
+            
+            closeQuizSetupModal();
+            showMessage("Quiz parameters updated successfully!", true);
+        }
+
+        function resetSystemParams() {
+            systemParams = JSON.parse(JSON.stringify(DEFAULT_SYSTEM_PARAMS));
+            allPlayersData[SYSTEM_PARAMS_KEY] = systemParams;
+            saveAllData();
+            
+            loadSystemParamsToModal(); 
+            showMessage("Quiz parameters reset to default values.", true);
+        }
+
+        
+        // --- QUIZ ACTIVE STATE MANAGEMENT ---
+        function setQuizActiveState(isActive) {
+            showQuizSetupButton.disabled = isActive;
+            managePlayersButton.disabled = isActive;
+            
+            playerSelectTop.disabled = isActive;
+
+            const sidebarButtons = document.querySelectorAll('#sidebar nav button');
+            sidebarButtons.forEach(btn => {
+                btn.disabled = isActive;
+                if(isActive) {
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            });
+
+            if (isActive) {
+                showRawDataButton.disabled = true;
+            } else {
+                showRawDataButton.disabled = (currentPlayerName === null);
+            }
+        }
+
+        // --- THEME / HUE FUNCTIONS ---
+
+        function savePlayerTheme(hue) {
+            if (!currentPlayerName) return;
+            
+            globalData.themeHue = hue; 
+            allPlayersData[currentPlayerName] = globalData; 
+            saveAllData(); 
+            applyThemeHue(hue); 
+        }
+
+        function applyThemeHue(hue) {
+            document.documentElement.style.setProperty('--primary-hue', hue);
+            if(hueSlider) hueSlider.value = hue;
+            
+            // Update preview color
+            if(colorPreview) colorPreview.style.backgroundColor = `hsl(${hue}, 80%, 60%)`;
+        }
+
+
+        // --- PLAYER FUNCTIONS ---
+
+        function setPlayerProfile(name, suppressUI = false) {
+            closeNewPlayerModal(); 
+            const normalizedName = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+            currentPlayerName = normalizedName;
+            
+            if (!allPlayersData[normalizedName]) {
+                allPlayersData[normalizedName] = JSON.parse(JSON.stringify(DEFAULT_PLAYER_DATA));
+                saveAllData();
+            }
+
+            globalData = allPlayersData[normalizedName];
+            
+            [globalData.mulTimes, globalData.divTimes].forEach(dataset => {
+                for (const key in dataset) {
+                    const entry = dataset[key];
+                    if (!entry.history && entry.totalTime !== undefined && entry.count > 0) {
+                        const avg = entry.totalTime / entry.count;
+                        const count = Math.min(entry.count, ROLLING_WINDOW);
+                        entry.history = Array(count).fill(avg);
+                        delete entry.totalTime; 
+                    } else if (!entry.history) {
+                        entry.history = [];
+                    }
+                }
+            });
+
+            // Handle legacy color or new hue
+            if (globalData.themeHue === undefined) {
+                globalData.themeHue = DEFAULT_HUE; 
+            }
+            applyThemeHue(globalData.themeHue);
+            
+            if(progressPlayerName) progressPlayerName.textContent = currentPlayerName;
+            if(calcPlayerBrand) calcPlayerBrand.textContent = currentPlayerName;
+            
+            if (!isRestoring) {
+                 showRawDataButton.disabled = false;
+            }
+            
+            if (!suppressUI) {
+                newPlayerNameInput.value = '';
+                setNewPlayerButton.disabled = true;
+                refreshPlayerList();
+                showMessage(`Welcome, ${currentPlayerName}!`, true); 
+            } else {
+                refreshPlayerList();
+            }
+
+            renderGrids();
+            updateSelectedTables(); 
+        }
+        
+        function refreshPlayerList() {
+            const players = Object.keys(allPlayersData)
+                .filter(key => key !== SYSTEM_PARAMS_KEY); 
+            renderPlayerList(players);
+            updateSelectedTables(); 
+        }
+        
+        function renderPlayerList(players) {
+            playerSelectTop.innerHTML = '';
+            
+            const defaultOption = document.createElement('option');
+            defaultOption.value = "";
+            defaultOption.textContent = "Select Player";
+            defaultOption.disabled = true;
+            defaultOption.className = "text-gray-800";
+            if(!currentPlayerName) defaultOption.selected = true;
+            playerSelectTop.appendChild(defaultOption);
+
+            players.sort((a, b) => a.localeCompare(b));
+
+            players.forEach(name => {
+                const option = document.createElement('option');
+                option.textContent = name;
+                option.value = name;
+                option.className = "text-gray-800";
+                if (name === currentPlayerName) {
+                    option.selected = true; 
+                }
+                playerSelectTop.appendChild(option);
+            });
+            
+            const createOption = document.createElement('option');
+            createOption.textContent = "+ Create New Player";
+            createOption.value = "_CREATE_NEW_";
+            createOption.className = "text-blue-600 font-bold bg-white";
+            playerSelectTop.appendChild(createOption);
+            
+            if (currentPlayerName && !allPlayersData[currentPlayerName]) {
+                 playerSelectTop.value = "";
+                 currentPlayerName = null;
+                 globalData = JSON.parse(JSON.stringify(DEFAULT_PLAYER_DATA));
+                 applyThemeHue(DEFAULT_HUE);
+                 renderGrids();
+                 showRawDataButton.disabled = true;
+                 updateSelectedTables();
+            }
+        }
+
+        // --- NEW PLAYER MODAL FUNCTIONS ---
+
+        function showNewPlayerModal() {
+            newPlayerError.classList.add('hidden');
+            newPlayerNameInput.value = '';
+            setNewPlayerButton.disabled = true;
+            newPlayerModal.classList.remove('hidden');
+            newPlayerNameInput.focus();
+        }
+        
+        function closeNewPlayerModal() {
+            newPlayerModal.classList.add('hidden');
+            refreshPlayerList();
+        }
+
+        function validateAndCreatePlayer() {
+            const newName = newPlayerNameInput.value.trim();
+            if (newName.length < 2) { 
+                newPlayerError.textContent = "Player name must be at least 2 characters long.";
+                newPlayerError.classList.remove('hidden');
+                return; 
+            }
+            newPlayerError.classList.add('hidden');
+            setPlayerProfile(newName);
+        }
+
+        // --- MANAGE PLAYERS MODAL FUNCTIONS ---
+        
+        function handleResetClick(btn) {
+            const player = btn.dataset.player;
+            requestAdminAuth(() => resetPlayerStats(player));
+        }
+
+        function openManagePlayersModal() {
+            const players = Object.keys(allPlayersData)
+                .filter(key => key !== SYSTEM_PARAMS_KEY)
+                .sort();
+
+            managePlayersList.innerHTML = '';
+
+            if (players.length === 0) {
+                managePlayersList.innerHTML = '<p class="text-white/50 italic text-center p-4">No players found.</p>';
+            } else {
+                players.forEach(player => {
+                    const row = document.createElement('div');
+                    row.className = 'flex justify-between items-center p-3 border-b border-white/10 hover:bg-white/5 rounded';
+                    row.innerHTML = `
+                        <span class="font-semibold text-white/90">${player}</span>
+                        <div class="space-x-2 flex">
+                            <button 
+                                class="reset-btn text-xs bg-yellow-500/20 text-yellow-300 px-3 py-2 rounded hover:bg-yellow-500/30 font-medium transition w-24 text-center border border-yellow-500/30" 
+                                data-player="${player}" 
+                            >
+                                Reset Stats
+                            </button>
+                            <button class="delete-btn text-xs bg-red-500/20 text-red-300 px-3 py-2 rounded hover:bg-red-500/30 font-medium transition w-20 text-center border border-red-500/30" data-player="${player}">
+                                Delete
+                            </button>
+                        </div>
+                    `;
+                    managePlayersList.appendChild(row);
+                });
+            }
+
+            managePlayersList.querySelectorAll('.reset-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => handleResetClick(e.target));
+            });
+
+            managePlayersList.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => handleDeleteClick(e.target));
+            });
+
+            managePlayersModal.classList.remove('hidden');
+        }
+
+        function resetPlayerStats(playerName) {
+            if (!allPlayersData[playerName]) return;
+            
+            const currentHue = allPlayersData[playerName].themeHue || DEFAULT_HUE;
+            const resetData = JSON.parse(JSON.stringify(DEFAULT_PLAYER_DATA));
+            resetData.themeHue = currentHue; // Preserve Hue
+            
+            allPlayersData[playerName] = resetData;
+            saveAllData();
+            
+            if (playerName === currentPlayerName) {
+                globalData = allPlayersData[playerName];
+                renderGrids();
+            }
+
+            showMessage(`Stats reset for ${playerName}.`);
+        }
+
+        function handleDeleteClick(btn) {
+            const player = btn.dataset.player;
+            
+            requestAdminAuth(() => {
+                deletePlayer(player);
+                const row = btn.closest('div.flex');
+                if(row) row.remove();
+                if (managePlayersList.children.length === 0) {
+                     managePlayersList.innerHTML = '<p class="text-white/50 italic text-center p-4">No players found.</p>';
+                }
+            });
+        }
+
+        function deletePlayer(playerName) {
+            if (allPlayersData[playerName]) {
+                const wasActive = playerName === currentPlayerName; 
+
+                delete allPlayersData[playerName];
+                saveAllData();
+                
+                if (wasActive) {
+                    currentPlayerName = null;
+                    globalData = JSON.parse(JSON.stringify(DEFAULT_PLAYER_DATA));
+                    
+                    if(progressPlayerName) progressPlayerName.textContent = "Player";
+                    if(calcPlayerBrand) calcPlayerBrand.textContent = "PLAYER";
+                    showRawDataButton.disabled = true;
+
+                    applyThemeHue(DEFAULT_HUE); 
+                    renderGrids();
+                    updateSelectedTables(); 
+                }
+                
+                refreshPlayerList(); 
+                showMessage(`${playerName} deleted.`);
+            }
+        }
+
+        // --- HELPER FUNCTIONS ---
+
+        function showMessage(text, isSuccess = true) {
+            if (isRestoring) return; 
+            messageBox.textContent = text;
+            messageBox.className = `fixed top-20 right-4 text-white p-4 rounded-xl shadow-2xl z-[90] transition-all duration-300 transform ${isSuccess ? 'bg-green-600/90' : 'bg-red-600/90'} translate-x-0 border border-white/20 backdrop-blur`;
+            messageBox.classList.remove('hidden');
+
+            setTimeout(() => {
+                messageBox.classList.add('translate-x-full');
+                setTimeout(() => messageBox.classList.add('hidden'), 500);
+            }, 3000);
+        }
+
+        const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        function updateLabelClass(checkbox) {
+            const label = checkbox.closest('label');
+            const span = label.querySelector('span');
+
+            if (checkbox.checked) {
+                label.classList.add('active-selection');
+            } else {
+                label.classList.remove('active-selection');
+            }
+        }
+
+        function updateSelectedTables() {
+            selectedTables = Array.from(document.querySelectorAll('.table-checkbox:checked'))
+                .map(cb => parseInt(cb.dataset.table));
+
+            const isReady = selectedTables.length > 0 && currentPlayerName !== null && isDataLoaded;
+
+            if (isReady) {
+                startQuizButton.disabled = false;
+                startQuizButton.textContent = `Start Quiz`; 
+            } else {
+                startQuizButton.disabled = true;
+                
+                if (currentPlayerName === null) {
+                    startQuizButton.textContent = `Select Player to Start`;
+                } else if (!isDataLoaded) {
+                     startQuizButton.textContent = `Loading Data...`;
+                } else {
+                    startQuizButton.textContent = `Select Tables to Start`; 
+                }
+            }
+        }
+
+        function getAverageTime(timeData) {
+            if (!timeData) return 0;
+            
+            if (timeData.history && Array.isArray(timeData.history) && timeData.history.length > 0) {
+                const sum = timeData.history.reduce((a, b) => a + b, 0);
+                return sum / timeData.history.length;
+            }
+            
+            if (timeData.totalTime !== undefined && timeData.count > 0) {
+                return timeData.totalTime / timeData.count;
+            }
+            
+            return 0;
+        }
+
+        function calculateWeight(A, B, operation) {
+            const key = `${A}_${B}`;
+            const dataSet = operation === 'mul' ? globalData.mulTimes : globalData.divTimes;
+            const timeObj = dataSet[key];
+            
+            if (!timeObj || timeObj.count === 0) return systemParams.weightFactorNew; 
+
+            const avgTime = getAverageTime(timeObj);
+
+            if (avgTime >= systemParams.weightThresholdRed) return systemParams.weightFactorPoor;
+            else if (avgTime >= systemParams.weightThresholdYellow) return systemParams.weightFactorIntermediate;
+            else return WEIGHT_FACTOR_GOOD;
+        }
+
+        function generateQuizQuestions() {
+            quizQuestions = [];
+            if (selectedTables.length === 0) return;
+
+            const totalQuestionsToGenerate = systemParams.totalQuestions;
+
+            const operationsToInclude = [];
+            currentOperationMode = document.querySelector('input[name="operation-mode"]:checked').value;
+
+            if (currentOperationMode === 'multiplication' || currentOperationMode === 'both') operationsToInclude.push('mul');
+            if (currentOperationMode === 'division' || currentOperationMode === 'both') operationsToInclude.push('div');
+
+            const weightedPool = [];
+
+            selectedTables.forEach(A => {
+                for (let B = 1; B <= 12; B++) {
+                    if (operationsToInclude.includes('mul')) {
+                        const weightAB = calculateWeight(A, B, 'mul'); 
+                        const countAB = Math.round(weightAB); 
+                        for (let i = 0; i < countAB; i++) weightedPool.push({ operation: 'mul', factor1: A, factor2: B });
+                        
+                        const weightBA = calculateWeight(B, A, 'mul'); 
+                        const countBA = Math.round(weightBA); 
+                        for (let i = 0; i < countBA; i++) weightedPool.push({ operation: 'mul', factor1: B, factor2: A });
+                    }
+                    if (operationsToInclude.includes('div')) {
+                        const weightDiv = calculateWeight(A, B, 'div');
+                        const countDiv = Math.round(weightDiv *2);
+                        for (let i = 0; i < countDiv; i++) weightedPool.push({ operation: 'div', divisor: A, answer: B });
+                    }
+                }
+            });
+            
+            for (let i = 0; i < totalQuestionsToGenerate; i++) {
+                if (weightedPool.length === 0) break;
+                const poolIndex = randomInt(0, weightedPool.length - 1);
+                const selected = weightedPool[poolIndex];
+                let question = { timeTaken: 0, correct: false, userAnswer: null, operation: selected.operation };
+
+                if (selected.operation === 'mul') {
+                    question.factor1 = selected.factor1;
+                    question.factor2 = selected.factor2;
+                    question.answer = question.factor1 * question.factor2;
+                } else { 
+                    question.divisor = selected.divisor;
+                    question.answer = selected.answer;
+                    question.dividend = question.divisor * question.answer;
+                }
+                quizQuestions.push(question);
+            }
+        }
+
+        function saveQuizState() {
+            if (!quizQuestions || quizQuestions.length === 0 || !currentPlayerName) return;
+            const state = {
+                name: currentPlayerName,
+                mode: currentOperationMode,
+                tables: selectedTables,
+                index: currentQuestionIndex,
+                questions: quizQuestions,
+                score: score
+            };
+            try { sessionStorage.setItem(QUIZ_STATE_KEY, JSON.stringify(state)); } catch (e) { console.error(e); }
+        }
+
+        function restoreQuizState() {
+            try {
+                const savedState = sessionStorage.getItem(QUIZ_STATE_KEY);
+                if (!savedState) return false;
+                const state = JSON.parse(savedState);
+                
+                if (!allPlayersData[state.name]) {
+                    sessionStorage.removeItem(QUIZ_STATE_KEY);
+                    return false;
+                }
+
+                isRestoring = true;
+                setPlayerProfile(state.name, true); 
+                currentOperationMode = state.mode;
+                
+                selectedTables = state.tables;
+                selectedTables.forEach(table => {
+                    const checkbox = document.querySelector(`.table-checkbox[data-table="${table}"]`);
+                    if (checkbox) { checkbox.checked = true; updateLabelClass(checkbox); }
+                });
+
+                const modeRadio = document.querySelector(`input[name="operation-mode"][value="${state.mode}"]`);
+                if (modeRadio) modeRadio.checked = true;
+
+                currentQuestionIndex = state.index;
+                quizQuestions = state.questions;
+                score = state.score;
+                
+                // IMPORTANT: When restoring, we must set history correctly
+                history.replaceState({ page: 'quiz' }, "", "#quiz");
+                
+                showPage('quiz');
+                setQuizActiveState(true); 
+                renderQuestion(); 
+                showMessage(`Quiz restored for ${state.name} at question ${currentQuestionIndex + 1}.`, true);
+                isRestoring = false; 
+                return true;
+            } catch (e) {
+                console.error("Error restoring quiz state:", e);
+                sessionStorage.removeItem(QUIZ_STATE_KEY);
+                isRestoring = false;
+                return false;
+            }
+        }
+        
+        // --- CALCULATOR INPUT FUNCTIONS ---
+
+        function addCalcInput(value) {
+            if (awaitingNext) return; 
+            if (value === '.' && currentCalcInput.includes('.')) return;
+            if (currentCalcInput.length > 8) return; 
+
+            currentCalcInput += value;
+            updateCalcDisplay();
+        }
+
+        function clearCalcInput() {
+            if (awaitingNext) return; 
+            currentCalcInput = "";
+            updateCalcDisplay();
+        }
+
+        function deleteLastCalcInput() {
+            if (awaitingNext) return; 
+            currentCalcInput = currentCalcInput.slice(0, -1);
+            updateCalcDisplay();
+        }
+
+        function updateCalcDisplay() {
+            answerInputDisplay.textContent = currentCalcInput === "" ? "_" : currentCalcInput;
+        }
+
+        // --- QUIZ FUNCTIONS ---
+
+        function renderQuestion() {
+            const totalQuestions = quizQuestions.length;
+            if (currentQuestionIndex >= totalQuestions) {
+                sessionStorage.removeItem(QUIZ_STATE_KEY); 
+                return showResults(false);
+            }
+
+            calcScreen.classList.remove('correct-flash', 'wrong-flash');
+            answerInputDisplay.style.fontSize = ""; 
+            answerInputDisplay.classList.remove('text-red-700', 'text-green-700'); 
+
+            currentQuestion = quizQuestions[currentQuestionIndex];
+            
+            calcProgressLabel.textContent = `Q: ${currentQuestionIndex + 1}/${totalQuestions}`;
+            
+            let questionString = '';
+            if (currentQuestion.operation === 'mul') {
+                questionString = `${currentQuestion.factor1} x ${currentQuestion.factor2}`;
+            } else { 
+                questionString = `${currentQuestion.dividend} ÷ ${currentQuestion.divisor}`;
+            }
+
+            questionText.textContent = questionString;
+            
+            clearCalcInput();
+            
+            awaitingNext = false;
+            waitingForFeedback = false; 
+            quizStartTime = Date.now();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            saveQuizState();
+            renderQuestion();
+        }
+
+        async function submitAnswer() {
+            if (waitingForFeedback) {
+                waitingForFeedback = false;
+                awaitingNext = false; 
+                nextQuestion();
+                return;
+            }
+
+            if (awaitingNext) return; 
+            if (!currentPlayerName) { showMessage("Error: No Player", false); return; }
+
+            const userAnswer = parseFloat(currentCalcInput);
+            if (isNaN(userAnswer)) { 
+                return; 
+            }
+
+            awaitingNext = true; 
+
+            const actualTimeTaken = (Date.now() - quizStartTime) / 1000;
+            currentQuestion.userAnswer = userAnswer;
+            currentQuestion.correct = (userAnswer === currentQuestion.answer);
+
+            let timeToRecord;
+            let trackA, trackB;
+
+            if (currentQuestion.operation === 'mul') {
+                trackA = currentQuestion.factor1;
+                trackB = currentQuestion.factor2;
+            } else { 
+                trackA = currentQuestion.divisor; 
+                trackB = currentQuestion.answer; 
+            }
+
+            waitingForFeedback = true; 
+
+            if (currentQuestion.correct) {
+                score++;
+                timeToRecord = parseFloat(actualTimeTaken.toFixed(2));
+                currentQuestion.timeTaken = timeToRecord;
+                
+                calcScreen.classList.add('correct-flash');
+                questionText.textContent = "CORRECT";
+                answerInputDisplay.textContent = `${timeToRecord.toFixed(2)}s`;
+                playCorrectSound();
+            } else {
+                timeToRecord = (typeof systemParams.penaltyTime === 'number') ? systemParams.penaltyTime : 10.00; 
+                currentQuestion.timeTaken = timeToRecord;
+                
+                calcScreen.classList.add('wrong-flash');
+                questionText.textContent = "INCORRECT";
+                
+                let correction = "";
+                if (currentQuestion.operation === 'mul') {
+                    correction = `${currentQuestion.factor1} x ${currentQuestion.factor2} = ${currentQuestion.answer}`;
+                } else {
+                    correction = `${currentQuestion.dividend} ÷ ${currentQuestion.divisor} = ${currentQuestion.answer}`;
+                }
+
+                if (correction.length > 9) {
+                    answerInputDisplay.style.fontSize = "2rem"; 
+                }
+                answerInputDisplay.textContent = correction;
+                playIncorrectSound();
+            }
+            
+            updateTrackingData(trackA, trackB, timeToRecord, currentQuestion.operation); 
+        }
+
+        function showResults(aborted = false, historyAction = 'replace') {
+            sessionStorage.removeItem(QUIZ_STATE_KEY); 
+            
+            navToPage('results', historyAction);
+            
+            playerSelectTop.disabled = true;
+
+            const resultsPlayerName = document.getElementById('results-player-name');
+            if(resultsPlayerName) resultsPlayerName.textContent = currentPlayerName;
+
+            const completedQuestions = quizQuestions.filter(q => q.userAnswer !== null);
+            
+            if (aborted) {
+                 resultsSummary.textContent = `Quiz Aborted. Score: ${score} / ${completedQuestions.length}`;
+            } else {
+                resultsSummary.textContent = `You scored ${score} out of ${completedQuestions.length}!`;
+            }
+
+            resultsDetails.innerHTML = completedQuestions.map((q) => {
+                const questionOp = q.operation === 'mul' ? 'x' : '÷';
+                const questionString = q.operation === 'mul' 
+                    ? `${q.factor1} ${questionOp} ${q.factor2} = `
+                    : `${q.dividend} ${questionOp} ${q.divisor} = `;
+                
+                let resultContent = '';
+                let resultClass = '';
+
+                if (q.correct) {
+                    resultContent = `${q.answer} <span class="font-normal text-sm">(Correct, ${q.timeTaken.toFixed(2)}s)</span>`;
+                    resultClass = 'text-green-400';
+                } else {
+                    resultContent = `${q.answer} <span class="font-bold">(You answered: ${q.userAnswer || 'N/A'})</span>`;
+                    resultClass = 'text-red-400';
+                }
+
+                return `<div class="mb-2 p-2 border-b border-white/10 last:border-b-0 ${resultClass}"><span class="font-semibold text-white/90">${questionString}</span> ${resultContent}</div>`;
+            }).join('');
+
+            currentQuestionIndex = 0;
+            score = 0;
+            quizQuestions = [];
+            awaitingNext = false;
+            waitingForFeedback = false; 
+        }
+
+        function startQuiz() {
+            // Re-assert audio context
+            initAudio();
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            if (selectedTables.length === 0) return;
+            if (!currentPlayerName) { showMessage("Please select or create a player profile first.", false); return; }
+
+            generateQuizQuestions();
+            
+            navToPage('quiz');
+            
+            setQuizActiveState(true); 
+            renderQuestion();
+            saveQuizState(); 
+        }
+        
+        // --- RAW DATA MODAL FUNCTIONS ---
+
+        function showRawDataModal() {
+            if (!currentPlayerName) {
+                showMessage("Please select a player profile first.", false);
+                return;
+            }
+            
+            modalPlayerName.textContent = currentPlayerName;
+            rawDataError.classList.add('hidden'); 
+            
+            const formattedJson = JSON.stringify(globalData, null, 2); 
+            rawDataContent.value = formattedJson; 
+            
+            rawDataModal.classList.remove('hidden');
+        }
+
+        function closeRawDataModal() {
+            rawDataModal.classList.add('hidden');
+        }
+        
+        function saveRawDataChanges() {
+            if (!currentPlayerName) {
+                showMessage("No player selected.", false);
+                return;
+            }
+            
+            const rawJsonString = rawDataContent.value;
+            let newPlayerData;
+            
+            try {
+                newPlayerData = JSON.parse(rawJsonString);
+            } catch (e) {
+                rawDataError.textContent = "Error: Invalid JSON format. Please check syntax (commas, quotes, brackets).";
+                rawDataError.classList.remove('hidden');
+                return;
+            }
+            
+            if (typeof newPlayerData !== 'object' || newPlayerData === null || 
+                !newPlayerData.mulTimes || !newPlayerData.divTimes) {
+                rawDataError.textContent = "Error: Data structure is incomplete. Must contain mulTimes and divTimes objects.";
+                rawDataError.classList.remove('hidden');
+                return;
+            }
+            
+            saveModalButton.disabled = true;
+            rawDataError.classList.add('hidden');
+            
+            try {
+                globalData = newPlayerData;
+                allPlayersData[currentPlayerName] = globalData;
+                saveAllData();
+                
+                closeRawDataModal();
+                showMessage(`Raw data successfully saved for ${currentPlayerName}.`, true);
+                if (globalData.themeHue !== undefined) {
+                    applyThemeHue(globalData.themeHue);
+                }
+                renderGrids();
+            } catch (error) {
+                console.error("Error saving raw tracking data:", error);
+                rawDataError.textContent = `Error saving: ${error.message}.`;
+                rawDataError.classList.remove('hidden');
+            } finally {
+                saveModalButton.disabled = false;
+            }
+        }
+
+        function exportRawData() {
+            if (!currentPlayerName || !globalData) {
+                showMessage("No player data to export.", false);
+                return;
+            }
+
+            const now = new Date();
+            const yy = String(now.getFullYear()).slice(-2);
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const hh = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            
+            const filename = `TT-${currentPlayerName}-${yy}${mm}${dd}-${hh}${min}.txt`;
+            const jsonStr = JSON.stringify(globalData, null, 2);
+            
+            const blob = new Blob([jsonStr], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+
+        // --- TRACKING UPDATE LOGIC (LOCAL) ---
+
+        function updateTrackingData(A, B, timeToRecord, operation) {
+            if (!currentPlayerName) return;
+
+            const canonicalKey = `${A}_${B}`;
+            const timeField = operation === 'mul' ? 'mulTimes' : 'divTimes';
+            const timeData = globalData[timeField][canonicalKey];
+            
+            if (timeData) {
+                if (!timeData.history) timeData.history = [];
+                timeData.history.push(timeToRecord);
+                if (timeData.history.length > ROLLING_WINDOW) {
+                    timeData.history.shift(); 
+                }
+                if (timeData.totalTime !== undefined) delete timeData.totalTime;
+                timeData.count = (timeData.count || 0) + 1;
+            } else {
+                globalData[timeField][canonicalKey] = { history: [timeToRecord], count: 1 };
+            }
+            
+            let totalAnswered = 0;
+            for (const key in globalData.mulTimes) totalAnswered += globalData.mulTimes[key].count || 0;
+            for (const key in globalData.divTimes) totalAnswered += globalData.divTimes[key].count || 0;
+            globalData.totalAnswered = totalAnswered;
+
+            allPlayersData[currentPlayerName] = globalData;
+            saveAllData();
+            
+            renderGrids();
+        }
+
+        // --- GRID RENDERING ---
+
+        function renderGrids() {
+            totalQuestionsAnsweredDisplay.textContent = globalData.totalAnswered.toLocaleString();
+            
+            if (document.getElementById('time-grid')) renderGrid('time-grid', 'mul');
+            if (document.getElementById('div-time-grid')) renderGrid('div-time-grid', 'div');
+
+            if (document.getElementById('results-time-grid')) renderGrid('results-time-grid', 'mul');
+            if (document.getElementById('results-div-time-grid')) renderGrid('results-div-time-grid', 'div');
+        }
+
+        function renderGrid(containerId, operation) {
+            const container = document.getElementById(containerId);
+            if (!container) return; 
+
+            let html = '';
+            const dataSet = operation === 'mul' ? globalData.mulTimes : globalData.divTimes;
+            
+            html += `<div class="flex flex-row flex-nowrap w-full">`;
+            const labelText = operation === 'mul' ? 'F2\\F1' : 'A\\D'; 
+            html += `<div class="grid-cell bg-white/20 border border-white/20 text-xs font-bold flex-1 text-white">${labelText}</div>`; 
+            for (let A = 1; A <= 12; A++) { 
+                html += `<div class="grid-cell bg-white/20 border border-white/20 text-xs font-bold flex-1 text-white">${A}</div>`;
+            }
+            html += `</div>`;
+
+            for (let B = 1; B <= 12; B++) { 
+                html += `<div class="flex flex-row flex-nowrap w-full">`;
+                html += `<div class="grid-cell bg-white/20 border border-white/20 text-xs font-bold flex-1 text-white">${B}</div>`;
+
+                for (let A = 1; A <= 12; A++) { 
+                    const canonicalKey = `${A}_${B}`;
+                    let displayValue = '-';
+                    let colorClass = 'bg-white/5';
+                    let questionTooltip = operation === 'mul' ? `${A} x ${B} = ${A*B}` : `${A*B} ÷ ${A} = ${B}`;
+                    let tooltip = `Fact: ${questionTooltip}`;
+
+                    const timeObj = dataSet[canonicalKey];
+                    if (timeObj && timeObj.count > 0) {
+                        const avgTime = getAverageTime(timeObj);
+                        
+                        displayValue = `${avgTime.toFixed(1)}`;
+                        tooltip += `\nRolling Avg: ${avgTime.toFixed(2)}s (Last ${timeObj.history ? timeObj.history.length : 0} attempts)`;
+                        tooltip += `\nTotal Answered: ${timeObj.count}`;
+                        
+                        if (avgTime < systemParams.weightThresholdYellow) colorClass = 'bg-green-400/80';
+                        else if (avgTime < systemParams.weightThresholdRed) colorClass = 'bg-yellow-400/80';
+                        else colorClass = 'bg-red-400/80';
+                    } else {
+                        tooltip += `\nNo data yet`;
+                    }
+
+                    html += `<div class="grid-cell border border-white/5 ${colorClass} hover:scale-105 flex-1" title="${tooltip}">${displayValue}</div>`;
+                }
+                html += `</div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        // --- INIT ---
+
+        function renderTableCheckboxes() {
+            tableCheckboxContainer.innerHTML = '';
+            for (let i = 1; i <= 12; i++) {
+                const checkboxHtml = `
+                    <label 
+                        data-table-label="${i}"
+                        class="table-label flex items-center justify-center p-2 rounded-lg transition duration-150 cursor-pointer shadow-sm glass hover:bg-white/10"
+                    >
+                        <input type="checkbox" data-table="${i}" class="table-checkbox hidden">
+                        <span class="text-lg font-semibold text-white/70">${i}</span>
+                    </label>
+                `;
+                tableCheckboxContainer.insertAdjacentHTML('beforeend', checkboxHtml);
+            }
+
+            document.querySelectorAll('.table-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    updateSelectedTables();
+                    updateLabelClass(checkbox);
+                });
+                updateLabelClass(checkbox);
+            });
+        }
+
+
+        window.onload = () => {
+            loadAllData();
+            loadAudioPrefs();
+            refreshPlayerList();
+            renderTableCheckboxes();
+            renderGrids(); 
+            
+            // Initialize History state for root
+            history.replaceState({ page: 'setup' }, "", "#setup");
+            
+            // MENU LISTENERS
+            menuBtn.addEventListener('click', toggleSidebar);
+            closeSidebarBtn.addEventListener('click', closeSidebar);
+            sidebarOverlay.addEventListener('click', closeSidebar);
+            
+            playerSelectTop.addEventListener('change', (e) => {
+                const val = e.target.value;
+                if (val === '_CREATE_NEW_') {
+                    showNewPlayerModal();
+                } else if (val) {
+                    setPlayerProfile(val);
+                }
+            });
+
+            // Restore session if exists
+            const restored = restoreQuizState();
+            if (!restored) {
+                showPage('setup');
+            }
+            
+            // --- NEW PLAYER MODAL LISTENERS ---
+            closeNewPlayerModalButton.addEventListener('click', closeNewPlayerModal);
+            
+            newPlayerModal.addEventListener('click', (e) => {
+                if (e.target === newPlayerModal) { closeNewPlayerModal(); }
+            });
+            
+            setNewPlayerButton.addEventListener('click', validateAndCreatePlayer);
+            
+            newPlayerNameInput.addEventListener('input', (e) => { 
+                const name = e.target.value.trim();
+                const isValid = name.length >= 2;
+                setNewPlayerButton.disabled = !isValid;
+                newPlayerError.classList.toggle('hidden', isValid);
+            });
+            
+            newPlayerNameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && setNewPlayerButton.disabled === false) { 
+                    e.preventDefault(); 
+                    validateAndCreatePlayer();
+                }
+            });
+
+            // --- TABLE SELECTION BUTTONS ---
+            const btnSelectAll = document.getElementById('btn-select-all');
+            const btnSelectNone = document.getElementById('btn-select-none');
+            const btnLuckyDip = document.getElementById('btn-lucky-dip');
+
+            btnSelectAll.addEventListener('click', () => {
+                document.querySelectorAll('.table-checkbox').forEach(cb => {
+                    cb.checked = true;
+                    updateLabelClass(cb);
+                });
+                updateSelectedTables();
+            });
+
+            btnSelectNone.addEventListener('click', () => {
+                 document.querySelectorAll('.table-checkbox').forEach(cb => {
+                    cb.checked = false;
+                    updateLabelClass(cb);
+                });
+                updateSelectedTables();
+            });
+
+            btnLuckyDip.addEventListener('click', () => {
+                const checkboxes = Array.from(document.querySelectorAll('.table-checkbox'));
+                checkboxes.forEach(cb => { cb.checked = false; updateLabelClass(cb); });
+                const numberOfTables = Math.floor(Math.random() * 12) + 1;
+                const shuffled = checkboxes.sort(() => 0.5 - Math.random());
+                shuffled.slice(0, numberOfTables).forEach(cb => {
+                    cb.checked = true;
+                    updateLabelClass(cb);
+                });
+                updateSelectedTables();
+            });
+
+
+            document.querySelectorAll('input[name="operation-mode"]').forEach(radio => {
+                radio.addEventListener('change', (e) => { currentOperationMode = e.target.value; });
+            });
+
+            startQuizButton.addEventListener('click', startQuiz);
+            
+            // End Quiz now calls showResults which uses router
+            endQuizButton.addEventListener('click', () => {
+                showResults(true); 
+            });
+            
+            // --- MANAGE PLAYERS LISTENERS ---
+            managePlayersButton.addEventListener('click', openManagePlayersModal);
+            closeManageModalButton.addEventListener('click', () => managePlayersModal.classList.add('hidden'));
+            managePlayersModal.addEventListener('click', (e) => {
+                if(e.target === managePlayersModal) managePlayersModal.classList.add('hidden');
+            });
+            
+            // --- THEME & AUDIO LISTENERS ---
+            if(hueSlider) {
+                hueSlider.addEventListener('input', (e) => {
+                   const val = e.target.value;
+                   applyThemeHue(val);
+                   if(currentPlayerName) savePlayerTheme(val);
+                });
+            }
+
+            const musicVolSlider = document.getElementById('musicVol');
+            const sfxVolSlider = document.getElementById('sfxVol');
+            const musicMuteBtn = document.getElementById('musicMute');
+            const sfxMuteBtn = document.getElementById('sfxMute');
+
+            // Settings Page Audio
+            if(musicVolSlider) {
+                musicVolSlider.addEventListener('input', (e) => {
+                    audioState.musicVol = parseFloat(e.target.value);
+                    if(audioState.musicVol > 0) {
+                        audioState.isMusicMuted = false;
+                    }
+                    saveAudioPrefs();
+                    applyAudioSettings();
+                });
+            }
+            if(sfxVolSlider) {
+                sfxVolSlider.addEventListener('input', (e) => {
+                    audioState.sfxVol = parseFloat(e.target.value);
+                    if(audioState.sfxVol > 0) {
+                        audioState.isSfxMuted = false;
+                    }
+                    saveAudioPrefs();
+                    applyAudioSettings();
+                });
+            }
+            if(musicMuteBtn) {
+                musicMuteBtn.addEventListener('click', () => {
+                    audioState.isMusicMuted = !audioState.isMusicMuted;
+                    saveAudioPrefs();
+                    applyAudioSettings();
+                      if (!audioState.isMusicMuted) {
+        handleMusicUnmute();
+    }
+                });
+            }
+            if(sfxMuteBtn) {
+                sfxMuteBtn.addEventListener('click', () => {
+                    audioState.isSfxMuted = !audioState.isSfxMuted;
+                    saveAudioPrefs();
+                    applyAudioSettings();
+                });
+            }
+
+            // Active Quiz Page Audio
+            if(quizMusicBtn) {
+                quizMusicBtn.addEventListener('click', () => {
+                    audioState.isMusicMuted = !audioState.isMusicMuted;
+                    saveAudioPrefs();
+                    applyAudioSettings();
+                      if (!audioState.isMusicMuted) {
+        handleMusicUnmute();
+    }
+                });
+            }
+            if(quizMuteBtn) {
+                quizMuteBtn.addEventListener('click', () => {
+                    audioState.isSfxMuted = !audioState.isSfxMuted;
+                    saveAudioPrefs();
+                    applyAudioSettings();
+                });
+            }
+
+            // --- QUIZ SETUP LISTENERS ---
+            showQuizSetupButton.addEventListener('click', openQuizSetupModal);
+            closeQuizSetupButton.addEventListener('click', closeQuizSetupModal);
+            quizSetupModal.addEventListener('click', (e) => {
+                if(e.target === quizSetupModal) closeQuizSetupModal();
+            });
+            resetSystemParamsButton.addEventListener('click', resetSystemParams);
+            
+            quizSetupForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveSystemParams();
+            });
+
+            // --- RAW DATA LISTENERS ---
+            showRawDataButton.addEventListener('click', showRawDataModal);
+            closeModalButton.addEventListener('click', closeRawDataModal);
+            saveModalButton.addEventListener('click', (e) => {
+                 requestAdminAuth(saveRawDataChanges);
+            }); 
+            // EXPORT BUTTON LISTENER
+            exportModalButton.addEventListener('click', exportRawData);
+
+            rawDataModal.addEventListener('click', (e) => {
+                if (e.target === rawDataModal) { closeRawDataModal(); }
+            });
+
+            // --- ADMIN AUTH LISTENERS ---
+            adminCodeAuthInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') confirmAdminAuth();
+            });
+
+            // --- GLOBAL KEYBOARD LISTENERS FOR CALCULATOR ---
+            document.addEventListener('keydown', (e) => {
+                const isQuizVisible = !pageActiveQuiz.classList.contains('hidden');
+                
+                if (!isQuizVisible) return;
+
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    submitAnswer();
+                    return;
+                }
+
+                if (awaitingNext) return;
+
+                if ((e.key >= '0' && e.key <= '9') || e.key === '.') {
+                    addCalcInput(e.key);
+                }
+
+                if (e.key === 'Backspace') {
+                    deleteLastCalcInput();
+                }
+
+                if (e.key === 'Escape') {
+                    clearCalcInput();
+                }
+            });
+
+            if (!currentPlayerName) {
+                applyThemeHue(DEFAULT_HUE);
+            }
+        };
+
+        const splash = document.getElementById('splashScreen');
+        const enterBtn = document.getElementById('enterBtn');
+
+        enterBtn.addEventListener('click', () => {
+            initAudio(); // Initialize logic
+            splash.classList.add('fade-out');
+            setTimeout(() => splash.style.display = 'none', 500);
+            showPage('setup'); 
+        });
+
+    </script>
+</body>
+</html>
