@@ -42,10 +42,10 @@
         }
 
         .dynamic-bg {
-            /* Dynamic gradient based on the selected hue */
+            /* Dynamic gradient based on the selected hue. prev h/70/40, h/60/20 */
             background: linear-gradient(135deg, 
-                hsl(var(--primary-hue), 70%, 40%) 0%, 
-                hsl(var(--primary-hue), 80%, 10%) 100%);
+                hsl(var(--primary-hue), 50%, 50%) 0%, 
+                hsl(var(--primary-hue), 60%, 20%) 100%);
             transition: background 0.5s ease;
         }
 
@@ -60,8 +60,8 @@
         body {
             padding-top: calc(var(--header-height) + env(safe-area-inset-top));
             background: linear-gradient(135deg, 
-                hsl(var(--primary-hue), 70%, 40%) 0%, 
-                hsl(var(--primary-hue), 80%, 10%) 100%);
+                hsl(var(--primary-hue), 50%, 50%) 0%, 
+                hsl(var(--primary-hue), 60%, 20%) 100%);
             transition: background 0.5s ease;
         }
 
@@ -2714,6 +2714,7 @@ function closeAllModals() {
     </script>
 </body>
 </html>
+
 
 
 
