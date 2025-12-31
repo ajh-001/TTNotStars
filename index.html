@@ -1414,7 +1414,7 @@ function closeAllModals() {
             const isQuizActive = !pageActiveQuiz.classList.contains('hidden');
             
             if (isQuizActive) {
-                showGuardModal("Quit Quiz?", "Your progress will be lost.", 
+                showGuardModal("Quit Quiz?", "Your progress will be saved, but you won't be able to rejoin this quiz.", 
                     () => {
                         history.pushState({ page: 'quiz' }, "", "#quiz");
                     },
@@ -2714,5 +2714,6 @@ function closeAllModals() {
     </script>
 </body>
 </html>
+
 
 
