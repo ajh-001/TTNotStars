@@ -1730,6 +1730,17 @@ function closeAllModals() {
 
             renderGrids();
             updateSelectedTables(); 
+            if (document.getElementById("progress-history-list")) {
+                renderProgressHistory();
+            }
+
+            if (document.getElementById("results-progress-history")) {
+                renderProgressHistory("results-progress-history", 5);
+            }
+
+            if (document.getElementById("results-progress-text")) {
+                renderResultsProgressBar();
+            }
         }
         
         function refreshPlayerList() {
