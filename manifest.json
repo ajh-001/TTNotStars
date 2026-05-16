@@ -1,7 +1,7 @@
 {
   "name": "TT Not-Stars",
   "short_name": "TT Not-Stars",
-  "start_url": "index.html",
+  "start_url": "./index.html",
   "scope": "/TTNotStars/",
   "display": "standalone",
   "background_color": "#789dcc",
